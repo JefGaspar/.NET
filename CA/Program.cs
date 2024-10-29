@@ -1,3 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
-Console.WriteLine("Hello, World!");
+using CA;
+
+ConsoleUi ui = new ConsoleUi();
+ui.Seed();
+ui.Run();
