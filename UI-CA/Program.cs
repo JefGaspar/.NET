@@ -1,6 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
-using CA;
+using UI;
 
 ConsoleUi ui = new ConsoleUi();
 ui.Seed();

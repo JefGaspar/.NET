@@ -1,4 +1,4 @@
-namespace CA;
+namespace UI;
 
 public class Event
 {
