@@ -10,12 +10,7 @@ public class Visitor
     public string City { get; set; }
 
     public List<Event> Events { get; set; }
-/*
-    public override string ToString()
-    {
-        return $"Visitor: {FirstName} {LastName}, Email: {Email}, Phone: {PhoneNumber}, City: {City}";
-    }
-    */
+
     public Visitor(){}
     
     public Visitor(int visitorId, string firstName, string lastName, string email, string phoneNumber, string city, List<Event> events)
@@ -29,9 +24,5 @@ public class Visitor
         this.Events = events;
     }
     
-    public string GetInfo()
-    {
-        return ToString();
-    }
     
 }
