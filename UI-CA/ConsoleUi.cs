@@ -17,7 +17,7 @@ public class ConsoleUi
             EventDate = new DateTime(2024, 09, 18, 14, 00, 00),
             TicketPrice = null,
             EventDescription = "Party for students",
-            Category = EventCategory.festival
+            Category = EventCategory.Festival
             
         };
         events.Add(studay);
@@ -29,7 +29,7 @@ public class ConsoleUi
             EventDate = new DateTime(2024, 11, 05, 10, 00, 00),
             TicketPrice = 25.00m,
             EventDescription = "A showcase of the latest in technology",
-            Category = EventCategory.conference
+            Category = EventCategory.Conference
         };
         events.Add(techExpo);
         
@@ -40,7 +40,7 @@ public class ConsoleUi
             EventDate = new DateTime(2024, 10, 10, 09, 00, 00),
             TicketPrice = 100.00m,
             EventDescription = "Summit for business networking and learning",
-            Category = EventCategory.networking
+            Category = EventCategory.Networking
         };
         events.Add(businessSummit);
 
@@ -51,7 +51,7 @@ public class ConsoleUi
             EventDate = new DateTime(2024, 08, 25, 16, 00, 00),
             TicketPrice = 50.00m,
             EventDescription = "A weekend of music and fun",
-            Category = EventCategory.music
+            Category = EventCategory.Music
         };
         events.Add(musicFest);
 
@@ -174,13 +174,21 @@ public class ConsoleUi
     
     private void ShowEventByCategory()
     {
-        Console.WriteLine("\nCategories: \n1)sport \n2)music \n3)theater \n4)conference \n5)workshop \n6)networking \n7)festival \n8)webinair \n9)fundraiser \n10)tournament");
-        Console.WriteLine("\nEnter category: ");
-        if (Enum.TryParse(Console.ReadLine(), out EventCategory category))
+        // Dynamisch weergeven van categorieën
+        Console.WriteLine("\nCategories:");
+        var categories = Enum.GetValues(typeof(EventCategory)).Cast<EventCategory>().ToList();
+        for (int i = 0; i < categories.Count; i++)
         {
-            var eventsInCategory = events.Where(e => e.Category == category).ToList();
+            Console.WriteLine($"{i + 1}) {categories[i]}");
+        }
 
-            Console.WriteLine($"\nEvents in this category: {category}");
+        Console.WriteLine("\nEnter category (choose number): ");
+        if (int.TryParse(Console.ReadLine(), out int categoryIndex) && categoryIndex >= 1 && categoryIndex <= categories.Count)
+        {
+            var selectedCategory = categories[categoryIndex - 1];
+            var eventsInCategory = events.Where(e => e.Category == selectedCategory).ToList();
+
+            Console.WriteLine($"\nEvents in this category: {selectedCategory}");
             Console.WriteLine("=========================");
 
             if (eventsInCategory.Any())
@@ -200,6 +208,7 @@ public class ConsoleUi
             Console.WriteLine("Invalid category, please try again.");
         }
     }
+
 
 
     private void ShowAllVisitors()
