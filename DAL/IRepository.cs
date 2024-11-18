@@ -1,6 +1,6 @@
-namespace DAL;
+namespace EM.DAL;
 
-public interface IRepository<T>
+public interface IRepository
 {
 
 }

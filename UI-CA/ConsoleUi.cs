@@ -1,3 +1,5 @@
+using UI.Extentions;
+
 namespace UI;
 
 public class ConsoleUi
@@ -168,7 +170,7 @@ public class ConsoleUi
         Console.WriteLine("=========================");
         foreach (var evnt in events) //event kan niet worden gebruikt als var omdat het een gereserveerd woord is
         {
-            Console.WriteLine(evnt);
+            Console.WriteLine(evnt.ToStringEvent());
         }
     }
     
@@ -195,7 +197,7 @@ public class ConsoleUi
             {
                 foreach (var evnt in eventsInCategory)
                 {
-                    Console.WriteLine(evnt);
+                    Console.WriteLine(evnt.ToStringEvent());
                 }
             }
             else
@@ -217,7 +219,7 @@ public class ConsoleUi
         Console.WriteLine("=========================");
         foreach (var visitor in visitors)
         {
-            Console.WriteLine(visitor);
+            Console.WriteLine(visitor.ToStringVisitor());
         }
     }
     
@@ -239,7 +241,7 @@ public class ConsoleUi
 
             if (matchesFirstName && matchesCity)
             {
-                Console.WriteLine(visitor);
+                Console.WriteLine(visitor.ToStringVisitor());
             }
             else
             {

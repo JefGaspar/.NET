@@ -10,7 +10,7 @@ public class Event
     public decimal? TicketPrice { get; set; }
     public List<Visitor>  Visitors { get; set; } = new List<Visitor>();
     public Organisation Organisation { get; set; }
-    
+    /*
     public override string ToString()
     {
         string ticketPriceStr = TicketPrice.HasValue ? $"€{TicketPrice.Value:F2}" : "Free";
@@ -18,7 +18,7 @@ public class Event
 
         return $"{EventName}: Date: {EventDate:yyyy-MM-dd HH:mm}, Description: {description}, Price: {ticketPriceStr}, Category: {Category}";
     }
-
+*/
     public Event() { }
 
     public Event(int eventId, string eventName, string eventDescription,  DateTime eventDate, decimal? ticketPrice, List<Visitor> visitors, EventCategory category = EventCategory.Sport)
