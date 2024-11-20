@@ -9,7 +9,9 @@ public class Visitor
     public string PhoneNumber { get; set; }
     public string City { get; set; }
 
-    public List<Event> Events { get; set; }
+    //kan ICollection zijn ipv list omdat het voor een veel relatie
+    //List geeft een harde koppeling omdat het uitgangspunt index based is wat niet nodig is voor een nav property
+    public ICollection<Event> Events { get; set; } = new List<Event>();
 
     public Visitor(){}
     

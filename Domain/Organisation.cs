@@ -9,6 +9,6 @@ public class Organisation
     public string ContactEmail { get; set; }
     
     // Relatie met events (een organisatie kan meerdere events organiseren)
-    public List<Event> Events { get; set; }
+    public ICollection<Event> Events { get; set; } = new List<Event>();
 
 }

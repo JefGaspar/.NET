@@ -8,7 +8,10 @@ public class Event
     public EventCategory Category { get; set; }
     public DateTime EventDate { get; set; }
     public decimal? TicketPrice { get; set; }
-    public List<Visitor>  Visitors { get; set; } = new List<Visitor>();
+    
+    //kan ICollection zijn ipv list omdat het voor een veel relatie
+    //List geeft een harde koppeling omdat het uitgangspunt index based is wat niet nodig is voor een nav property
+    public ICollection<Visitor>  Visitors { get; set; } = new List<Visitor>();
     public Organisation Organisation { get; set; }
  
     public Event() { }
