@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using BL;
 using EM.DAL;
 using EM.UI.CA.Extentions;
@@ -16,8 +17,6 @@ public class ConsoleUi
   
     public void Run()
     {
-        InMemoryRepository.Seed();
-        
         bool running = true;
         while (running)
         {
@@ -41,12 +40,19 @@ public class ConsoleUi
                 case "4":
                     ShowVisitorsByNameOrCity();
                     break;
+                case "5":
+                    AddNewEvent();
+                    break;
+                case "6":
+                    AddNewVisitor();
+                    break;
                 default:
                     Console.WriteLine("Invalid choice, please try again.");
                     break;
             }
         }
     }
+
     private void ShowMenu()
     {
         Console.WriteLine("What would you like to do?");
@@ -56,8 +62,11 @@ public class ConsoleUi
         Console.WriteLine("2) Show all events by category");
         Console.WriteLine("3) Show all visitors");
         Console.WriteLine("4) Show all visitors by name and/or city");
-        Console.Write("Choice (0-4): ");
+        Console.WriteLine("5) Add a new event");
+        Console.WriteLine("6) Add a new visitor");
+        Console.Write("Choice (0-6): ");
     }
+
 
     private void ShowAllEvents()
     {
@@ -143,6 +152,117 @@ public class ConsoleUi
             Console.WriteLine("No visitors match the given criteria.");
         }
     }
+
+   private void AddNewEvent()
+{
+    try
+    {
+        Console.WriteLine("\nAdd a new Event");
+        Console.WriteLine("============================");
+
+        Console.Write("Event Name: ");
+        string name = Console.ReadLine();
+
+        Console.Write("Event Description: ");
+        string description = Console.ReadLine();
+
+        Console.Write("Event Date (yyyy-MM-dd HH:mm): ");
+        if (!DateTime.TryParse(Console.ReadLine(), out DateTime date))
+        {
+            throw new FormatException("Invalid date format.");
+        }
+
+        Console.Write("Ticket Price (leave empty for free): ");
+        string ticketPriceInput = Console.ReadLine();
+        decimal? ticketPrice = string.IsNullOrEmpty(ticketPriceInput)
+            ? (decimal?)null
+            : Convert.ToDecimal(ticketPriceInput);
+
+        Console.WriteLine("Select Event Category:");
+        var categories = Enum.GetValues(typeof(EventCategory)).Cast<EventCategory>().ToList();
+        for (int i = 0; i < categories.Count; i++)
+        {
+            Console.WriteLine($"{i + 1}) {categories[i]}");
+        }
+
+        Console.Write("Category (choose number): ");
+        if (!int.TryParse(Console.ReadLine(), out int categoryIndex) || categoryIndex < 1 || categoryIndex > categories.Count)
+        {
+            throw new ArgumentException("Invalid category selection.");
+        }
+        EventCategory category = categories[categoryIndex - 1];
+
+        // Voeg het nieuwe event toe via de manager
+        var newEvent = _manager.AddEvent(name, date, ticketPrice, description, category);
+        Console.WriteLine($"\nEvent successfully added: {newEvent.EventName}");
+    }
+    catch (ValidationException ex)
+    {
+        Console.WriteLine($"Validation error: {ex.Message}");
+    }
+    catch (FormatException ex)
+    {
+        Console.WriteLine($"Input error: {ex.Message}");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"An unexpected error occurred: {ex.Message}");
+    }
+    finally
+    {
+        // Terugkeren naar het menu
+        Console.WriteLine("Returning to the main menu...");
+    }
+}
+
+private void AddNewVisitor()
+{
+    try
+    {
+        Console.WriteLine("\nAdd a new Visitor");
+        Console.WriteLine("============================");
+
+        Console.Write("First Name: ");
+        string firstName = Console.ReadLine();
+
+        Console.Write("Last Name: ");
+        string lastName = Console.ReadLine();
+
+        Console.Write("Email: ");
+        string email = Console.ReadLine();
+
+        Console.Write("Phone Number: ");
+        string phoneNumber = Console.ReadLine();
+
+        Console.Write("City: ");
+        string city = Console.ReadLine();
+
+        // Voeg de nieuwe visitor toe via de manager
+        var newVisitor = _manager.AddVisitor(firstName, lastName, email, phoneNumber, city);
+        Console.WriteLine($"\nVisitor successfully added: {newVisitor.FirstName} {newVisitor.LastName}");
+    }
+    catch (ValidationException ex)
+    {
+        Console.WriteLine($"Validation error: {ex.Message}");
+    }
+    catch (FormatException ex)
+    {
+        Console.WriteLine($"Input error: {ex.Message}");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"An unexpected error occurred: {ex.Message}");
+    }
+    finally
+    {
+        // Terugkeren naar het menu
+        Console.WriteLine("Returning to the main menu...");
+    }
+}
+
+
+
+
 
 
 }

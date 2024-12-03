@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using EM.DAL;
 using UI; 
 
@@ -30,11 +31,7 @@ namespace BL
 
         public Event AddEvent(string name, DateTime date, decimal? ticketPrice, string description, EventCategory category)
         {
-            if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentException("Event name cannot be empty.");
-            if (date < DateTime.Now)
-                throw new ArgumentException("Event date cannot be in the past.");
-            
+            // Maak het nieuwe Event object aan
             var newEvent = new Event
             {
                 EventName = name,
@@ -44,9 +41,14 @@ namespace BL
                 Category = category
             };
 
+            // Valideer het nieuwe object
+            ValidateObject(newEvent);
+
+            // Voeg het gevalideerde object toe via de repository
             _repository.CreateEvent(newEvent);
             return newEvent;
         }
+
 
         public Visitor GetVisitor(int id)
         {
@@ -65,11 +67,7 @@ namespace BL
 
         public Visitor AddVisitor(string firstName, string lastName, string email, string phoneNumber, string city)
         {
-            if (string.IsNullOrWhiteSpace(firstName))
-                throw new ArgumentException("First name cannot be empty.");
-            if (string.IsNullOrWhiteSpace(email) || !email.Contains("@"))
-                throw new ArgumentException("Email is invalid.");
-            
+            // Maak het nieuwe Visitor object aan
             var newVisitor = new Visitor
             {
                 FirstName = firstName,
@@ -79,8 +77,27 @@ namespace BL
                 City = city
             };
 
+            // Valideer het nieuwe object
+            ValidateObject(newVisitor);
+
+            // Voeg het gevalideerde object toe via de repository
             _repository.CreateVisitor(newVisitor);
             return newVisitor;
         }
+
+        private void ValidateObject(object obj)
+        {
+            var validationResults = new List<ValidationResult>();
+            var validationContext = new ValidationContext(obj);
+
+            if (!Validator.TryValidateObject(obj, validationContext, validationResults, true))
+            {
+                // Als validatie faalt, gooi een exception met de validatiefouten
+                var errors = string.Join("; ", validationResults.Select(vr => vr.ErrorMessage));
+                throw new ValidationException($"Validation failed: {errors}");
+            }
+        }
+
     }
+    
 }
