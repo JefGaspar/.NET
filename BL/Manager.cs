@@ -90,11 +90,20 @@ namespace BL
             var validationResults = new List<ValidationResult>();
             var validationContext = new ValidationContext(obj);
 
-            if (!Validator.TryValidateObject(obj, validationContext, validationResults, true))
+            // Valideer standaard attributen
+            bool isValid = Validator.TryValidateObject(obj, validationContext, validationResults, validateAllProperties: true);
+
+            // Controleer of het object IValidatableObject implementeert
+            if (obj is IValidatableObject validatable)
             {
-                // Als validatie faalt, gooi een exception met de validatiefouten
-                var errors = string.Join("; ", validationResults.Select(vr => vr.ErrorMessage));
-                throw new ValidationException($"Validation failed: {errors}");
+                var customValidationResults = validatable.Validate(validationContext);
+                validationResults.AddRange(customValidationResults);
+            }
+
+            if (validationResults.Any())
+            {
+                var errors = string.Join("|", validationResults.Select(vr => vr.ErrorMessage));
+                throw new ValidationException($"{errors}");
             }
         }
 

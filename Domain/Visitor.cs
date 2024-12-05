@@ -8,15 +8,15 @@ namespace UI
     {
         public int VisitorId { get; set; }
 
-        [Required(ErrorMessage = "First name is required.")]
+        [Required]
         [StringLength(50, ErrorMessage = "First name cannot exceed 50 characters.")]
         public string FirstName { get; set; }
 
-        [Required(ErrorMessage = "Last name is required.")]
+        [Required]
         [StringLength(50, ErrorMessage = "Last name cannot exceed 50 characters.")]
         public string LastName { get; set; }
 
-        [Required(ErrorMessage = "Email is required.")]
+        [Required]
         [EmailAddress(ErrorMessage = "Invalid email format.")]
         public string Email { get; set; }
 
@@ -42,17 +42,21 @@ namespace UI
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
-            // Custom validation: ensure that FirstName and LastName are not identical
+            // Lijst om validatiefouten op te slaan
+            List<ValidationResult> errors = new List<ValidationResult>();
+
+            // Controleer of FirstName en LastName identiek zijn
             if (FirstName != null && LastName != null && FirstName.Equals(LastName, StringComparison.OrdinalIgnoreCase))
             {
-                yield return new ValidationResult("First name and last name cannot be the same.", new[] { nameof(FirstName), nameof(LastName) });
+                errors.Add(new ValidationResult(
+                    "First name and last name cannot be the same.",
+                    new[] { nameof(FirstName), nameof(LastName) }
+                ));
             }
-
-            // Custom validation: ensure that City is not null or empty if Events are present
-            if (Events.Count > 0 && string.IsNullOrWhiteSpace(City))
-            {
-                yield return new ValidationResult("City is required if the visitor is attending events.", new[] { nameof(City) });
-            }
+            
+            // Retourneer alle validatiefouten
+            return errors;
         }
+
     }
 }

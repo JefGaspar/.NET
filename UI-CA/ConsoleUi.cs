@@ -153,7 +153,7 @@ public class ConsoleUi
         }
     }
 
-   private void AddNewEvent()
+  private void AddNewEvent()
 {
     try
     {
@@ -198,7 +198,13 @@ public class ConsoleUi
     }
     catch (ValidationException ex)
     {
-        Console.WriteLine($"Validation error: {ex.Message}");
+        // Splits de foutmeldingen en toon ze met \n
+        var errorMessages = ex.Message.Split('|');
+        Console.WriteLine("Validation errors:");
+        foreach (var error in errorMessages)
+        {
+            Console.WriteLine($"- {error.Trim()}");
+        }
     }
     catch (FormatException ex)
     {
@@ -243,7 +249,13 @@ private void AddNewVisitor()
     }
     catch (ValidationException ex)
     {
-        Console.WriteLine($"Validation error: {ex.Message}");
+        // Splits de foutmeldingen en toon ze met \n
+        var errorMessages = ex.Message.Split('|');
+        Console.WriteLine("Validation errors:");
+        foreach (var error in errorMessages)
+        {
+            Console.WriteLine($"- {error.Trim()}");
+        }
     }
     catch (FormatException ex)
     {
