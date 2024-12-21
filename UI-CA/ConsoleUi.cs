@@ -2,17 +2,21 @@ using System.ComponentModel.DataAnnotations;
 using BL;
 using EM.DAL;
 using EM.UI.CA.Extentions;
+using EM.DAL.EF;
+using Microsoft.EntityFrameworkCore;
 
 namespace UI;
 
 public class ConsoleUi
 {
     private readonly IManager _manager;
+    private readonly EMDbContext _context;
 
     //losse koppeling van pres layer naar BL
-    public ConsoleUi(IManager manager)
+    public ConsoleUi(IManager manager, EMDbContext dbContext)
     {
         _manager = manager;
+        _context = dbContext;
     }
   
     public void Run()

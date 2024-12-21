@@ -1,7 +1,10 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace UI;
 
 public class Organisation
 {
+    [Key]
     public int OrgId { get; set; }
     public string OrgName { get; set; }
     public string OrgDescription { get; set; }
