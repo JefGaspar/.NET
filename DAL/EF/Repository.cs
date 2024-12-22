@@ -15,16 +15,12 @@ public class Repository : IRepository
 
     public Event ReadEvent(int id)
     {
-        return _emDbContext.Events
-            .Include(e => e.Visitors)
-            .SingleOrDefault(e => e.EventId == id);
+        return _emDbContext.Events.Find(id);
     }
 
     public IEnumerable<Event> ReadAllEvents()
     {
-        return _emDbContext.Events
-            .Include(e => e.Visitors)
-            .ToList();
+        return _emDbContext.Events.ToList();
     }
 
     public IEnumerable<Event> ReadEventsByCategory(EventCategory category)
@@ -43,31 +39,45 @@ public class Repository : IRepository
 
     public Visitor ReadVisitor(int id)
     {
-        return _emDbContext.Visitors
-            .Include(v => v.Events) 
-            .SingleOrDefault(v => v.VisitorId == id);
+        return _emDbContext.Visitors.Find(id);
     }
 
 
     public IEnumerable<Visitor> ReadAllVisitors()
     {
-        return _emDbContext.Visitors
-            .Include(v => v.Events) 
-            .ToList();
+        return _emDbContext.Visitors.ToList();
     }
 
-
-    public IEnumerable<Visitor> ReadVisitorsByNameOrCity(string firstName, string city)
+/*
+ * parameters zijn optioneel gemaakt omdat niet beide filters ingevult moeten zijn, dus al gebruiker nu leeg laat krijgt standaardwaarde van null
+ */
+    public IEnumerable<Visitor> ReadVisitorsByNameOrCity(string firstName = null, string city= null)
     {
-        return _emDbContext.Visitors.Where(v =>
-            (string.IsNullOrEmpty(firstName) || v.FirstName.Contains(firstName, StringComparison.OrdinalIgnoreCase)) &&
-            (string.IsNullOrEmpty(city) || v.City.Contains(city, StringComparison.OrdinalIgnoreCase))
-        ).ToList();    }
+        var query = _emDbContext.Visitors.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(firstName))
+        {
+            query = query.Where(v => v.FirstName.ToLower().Contains(firstName.ToLower()));
+        }
+
+        if (!string.IsNullOrWhiteSpace(city))
+        {
+            query = query.Where(v => v.City.ToLower().Contains(city.ToLower()));
+        }
+        return query.ToList();
+    }
 
     public void CreateVisitor(Visitor visitor)
     {
         _emDbContext.Visitors.Add(visitor);
         _emDbContext.SaveChanges();
-        
+    }
+
+    public void CreateOrganisation(Organisation organisation)
+    {
+        _emDbContext.Organisations.Add(organisation);
+        _emDbContext.SaveChanges();
     }
 }
+
+ 

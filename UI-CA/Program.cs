@@ -8,28 +8,24 @@ using Microsoft.EntityFrameworkCore;
 
 //Composition Root
 //initialiseer repo, manager en DB
-InMemoryRepository repository = new InMemoryRepository();
-IManager manager = new Manager(repository);
-var dbOptionBuilder = new DbContextOptionsBuilder<EMDbContext>();
-dbOptionBuilder.UseSqlite("Data Source=EMDatabase.db");
+var projectRoot = Path.Combine(AppContext.BaseDirectory, "../../../../EMDatabase.db");
 
-var context = new EMDbContext(dbOptionBuilder.Options);
+var dbOptionBuilder = new DbContextOptionsBuilder<EMDbContext>();
+dbOptionBuilder.UseSqlite($"Data Source={projectRoot}");
+
+var contxt = new EMDbContext(dbOptionBuilder.Options);
+IRepository repository = new Repository(contxt);
+IManager manager = new Manager(repository);
+var consoleUi  = new ConsoleUi(manager);
 
 // Roep CreateDatabase aan en controleer of de database nieuw werd aangemaakt
-bool databaseCreated = context.CreateDatabase(deleteIfExists: true);
-
-if (databaseCreated)
+if (contxt.CreateDatabase(deleteIfExists: true))
 {
     Console.WriteLine("De databank is nieuw aangemaakt.");
-    DataSeeder.Seed(context);
+    DataSeeder.Seed(contxt);
 }
 else
 {
     Console.WriteLine("De databank bestond al en bleef behouden.");
 }
-//Maak nieuwe consoleUI instantie, geef manager mee
-var consoleUi  = new ConsoleUi(manager,context);
-
-//seeding en run
-InMemoryRepository.Seed();
 consoleUi.Run();

@@ -10,13 +10,11 @@ namespace UI;
 public class ConsoleUi
 {
     private readonly IManager _manager;
-    private readonly EMDbContext _context;
 
     //losse koppeling van pres layer naar BL
-    public ConsoleUi(IManager manager, EMDbContext dbContext)
+    public ConsoleUi(IManager manager )
     {
         _manager = manager;
-        _context = dbContext;
     }
   
     public void Run()

@@ -1,7 +1,7 @@
 using UI;
 
 namespace EM.DAL;
-
+/*
 public class InMemoryRepository : IRepository
 {
     private static List<Event> _events = new List<Event>();
@@ -148,4 +148,4 @@ public class InMemoryRepository : IRepository
         _visitors.Add(visitor);
     }
 
-}
+}*/

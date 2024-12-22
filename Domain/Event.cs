@@ -1,10 +1,11 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace UI;
 
 public class Event
 {
-    public int EventId { get; set; }   
+    [Key] public int EventId { get; set; }   
     
     [Required]
     [StringLength(100, ErrorMessage = "Event name cannot exceed 100 characters.")]
@@ -21,12 +22,14 @@ public class Event
     
     //kan ICollection zijn ipv list omdat het voor een veel relatie
     //List geeft een harde koppeling omdat het uitgangspunt index based is wat niet nodig is voor een nav property
+    [NotMapped] 
     public ICollection<Visitor>  Visitors { get; set; } = new List<Visitor>();
+    [NotMapped] 
     public Organisation Organisation { get; set; }
  
     public Event() { }
 
-    public Event(int eventId, string eventName, string eventDescription,  DateTime eventDate, decimal? ticketPrice, List<Visitor> visitors, EventCategory category = EventCategory.Sport)
+    public Event(int eventId, string eventName, string eventDescription,  DateTime eventDate, decimal? ticketPrice, EventCategory category = EventCategory.Sport)
     {
         this.EventId = eventId;
         this.EventName = eventName;
@@ -34,14 +37,7 @@ public class Event
         this.Category = category;
         this.EventDate = eventDate;
         this.TicketPrice = ticketPrice;
-        this.Visitors = visitors;
     }
-
-    public string GetInfo()
-    {
-        return ToString();
-    }
-
     
 }
 

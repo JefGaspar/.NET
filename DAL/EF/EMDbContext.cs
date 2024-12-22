@@ -24,19 +24,14 @@ public class EMDbContext : DbContext
     public DbSet<Visitor> Visitors { get; set; }
     
     
-    public bool CreateDatabase(bool deleteIfExists)
+    public bool CreateDatabase(bool deleteIfExists = false)
     {
         // Controleer of de databank moet worden verwijderd
-        if (deleteIfExists && Database.EnsureDeleted())
+        if (deleteIfExists)
         {
-            // De database is succesvol verwijderd
-            Console.WriteLine("De databank is verwijderd.");
+            Database.EnsureDeleted();
         }
-
-        // Zorg dat de databank wordt aangemaakt (indien niet al aanwezig)
-        bool isCreated = Database.EnsureCreated();
-        
-        return isCreated; // Retourneert true als de databank nieuw werd aangemaakt, anders false
+        return Database.EnsureCreated();
     }
     
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -44,10 +39,12 @@ public class EMDbContext : DbContext
         // Controleer of de options nog niet geconfigureerd zijn
         if (!optionsBuilder.IsConfigured)
         {
-            optionsBuilder
-                .UseSqlite("Data Source=EMDatabase.db") 
-                .LogTo(message => Debug.WriteLine(message), LogLevel.Information); // Logging activeren naar Debug-venster
+            //fallback
+            var defaultPath = Path.Combine(AppContext.BaseDirectory, "../../../../EMDatabase.db");
+            optionsBuilder.UseSqlite($"Data Source={defaultPath}");
         }
+        optionsBuilder.LogTo(message => Debug.WriteLine(message), LogLevel.Information); // Logging activeren naar Debug-venster
+
     }
     
 

@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace UI
 {
     public class Visitor : IValidatableObject
     {
-        public int VisitorId { get; set; }
+        [Key] public int VisitorId { get; set; }
 
         [Required]
         [StringLength(50, ErrorMessage = "First name cannot exceed 50 characters.")]
@@ -25,11 +26,12 @@ namespace UI
 
         public string City { get; set; }
 
+        [NotMapped] 
         public ICollection<Event> Events { get; set; } = new List<Event>();
 
         public Visitor() { }
 
-        public Visitor(int visitorId, string firstName, string lastName, string email, string phoneNumber, string city, List<Event> events)
+        public Visitor(int visitorId, string firstName, string lastName, string email, string phoneNumber, string city)
         {
             this.VisitorId = visitorId;
             this.FirstName = firstName;
@@ -37,7 +39,6 @@ namespace UI
             this.Email = email;
             this.PhoneNumber = phoneNumber;
             this.City = city;
-            this.Events = events;
         }
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
