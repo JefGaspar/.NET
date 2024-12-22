@@ -6,7 +6,7 @@ public static class DataSeeder
     public static void Seed(EMDbContext context)
     {
         // Controleer of de database al gegevens bevat
-        if (context.Events.Any() || context.Visitors.Any())
+        if (context.Events.Any() || context.Visitors.Any() || context.Tickets.Any())
         {
             return; // Stop als er al gegevens zijn
         }
@@ -27,25 +27,26 @@ public static class DataSeeder
         Organisation greenFuture = new Organisation(2, "GreenFuture Initiatives", "A non-profit organization dedicated to promoting sustainability and renewable energy projects.", new DateOnly(2005, 8, 23), "info@greenfuture.org");
         Organisation culturalHorizons = new Organisation(3, "Cultural Horizons", "Fostering cultural exchange and creative arts through events and workshops.", new DateOnly(2018, 3, 9), "hello@culturalhorizons.com");
         Organisation healthLink = new Organisation(4, "HealthLink International", "Connecting healthcare providers with innovative medical technologies and solutions worldwide.", new DateOnly(2012, 11, 5), "support@healthlinkint.com");
+        Organisation futureTech = new Organisation(5, "FutureTech Solutions", "Innovative solutions provider specializing in robotics and automation for industries.", new DateOnly(2015, 6, 20), "info@futuretech.com");
 
-        // Koppel bezoekers aan evenementen
-        studay.Visitors.Add(stan);
-        studay.Visitors.Add(emma);  
+        // Voeg tickets toe
+        Ticket ticket1 = new Ticket { Event = studay, Visitor = stan, PurchaseDate = DateTime.Now.AddDays(-10) };
+        Ticket ticket2 = new Ticket { Event = studay, Visitor = emma, PurchaseDate = DateTime.Now.AddDays(-5) };
+        Ticket ticket3 = new Ticket { Event = techExpo, Visitor = lucas, PurchaseDate = DateTime.Now.AddDays(-20) };
+        Ticket ticket4 = new Ticket { Event = businessSummit, Visitor = olivia, PurchaseDate = DateTime.Now.AddDays(-15) };
+        Ticket ticket5 = new Ticket { Event = musicFest, Visitor = emma, PurchaseDate = DateTime.Now.AddDays(-2) };
 
-        techExpo.Visitors.Add(stan);
-        techExpo.Visitors.Add(lucas);
-
-        businessSummit.Visitors.Add(olivia);
-        businessSummit.Visitors.Add(emma);
-
-        musicFest.Visitors.Add(olivia);
-        musicFest.Visitors.Add(lucas);
+        // Koppel organisaties aan evenementen
+        studay.Organisation = techSphere;
+        techExpo.Organisation = greenFuture;
+        businessSummit.Organisation = culturalHorizons;
+        musicFest.Organisation = healthLink;
 
         // Voeg objecten toe aan de context
         context.Events.AddRange(studay, techExpo, businessSummit, musicFest);
         context.Visitors.AddRange(stan, emma, lucas, olivia);
-        context.Organisations.AddRange(techSphere, greenFuture, culturalHorizons, healthLink);
-
+        context.Organisations.AddRange(techSphere, greenFuture, culturalHorizons, healthLink, futureTech);
+        context.Tickets.AddRange(ticket1, ticket2, ticket3, ticket4, ticket5);
 
         // Sla wijzigingen op in de database
         context.SaveChanges();

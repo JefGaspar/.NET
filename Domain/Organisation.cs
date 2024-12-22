@@ -11,7 +11,7 @@ public class Organisation
     public string OrgDescription { get; set; }
     public DateOnly FoundedDate { get; set; }
     public string ContactEmail { get; set; }
-    [NotMapped] 
+    
     // Relatie met events (een organisatie kan meerdere events organiseren)
     public ICollection<Event> Events { get; set; } = new List<Event>();
 

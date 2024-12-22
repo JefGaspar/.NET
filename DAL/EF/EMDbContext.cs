@@ -22,6 +22,7 @@ public class EMDbContext : DbContext
     public DbSet<Event> Events { get; set; }
     public DbSet<Organisation> Organisations { get; set; }
     public DbSet<Visitor> Visitors { get; set; }
+    public DbSet<Ticket> Tickets { get; set; }
     
     
     public bool CreateDatabase(bool deleteIfExists = false)
@@ -46,6 +47,39 @@ public class EMDbContext : DbContext
         optionsBuilder.LogTo(message => Debug.WriteLine(message), LogLevel.Information); // Logging activeren naar Debug-venster
 
     }
+    
+    //Fluent API
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Ticket>()
+            .Property<int>("fkEventId");
+        modelBuilder.Entity<Ticket>()
+            .Property<int>("fkVisitorId");
+        //Ticket * - 1 Event
+        modelBuilder.Entity<Ticket>()
+            .HasOne(t => t.Event)
+            .WithMany(e => e.Tickets)
+            .HasForeignKey("fkEventId")
+            .IsRequired();
+        //Visitor * - 1 Ticket
+        modelBuilder.Entity<Ticket>()
+            .HasOne(t => t.Visitor)
+            .WithMany(v => v.Tickets)
+            .HasForeignKey("fkVisitorId")
+            .IsRequired();
+
+        modelBuilder.Entity<Ticket>()
+            .HasKey("fkEventId","fkVisitorId");
+        
+        
+        modelBuilder.Entity<Event>()
+            .HasOne(e => e.Organisation)
+            .WithMany(o => o.Events)
+            .IsRequired(false);
+    }
+
     
 
 }

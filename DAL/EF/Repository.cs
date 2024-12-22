@@ -26,8 +26,7 @@ public class Repository : IRepository
     public IEnumerable<Event> ReadEventsByCategory(EventCategory category)
     {
         return _emDbContext.Events
-            .Where(e => e.Category == category).
-            Include(e => e.Visitors)
+            .Where(e => e.Category == category)
             .ToList();
     }
 

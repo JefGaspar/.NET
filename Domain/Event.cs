@@ -22,9 +22,7 @@ public class Event
     
     //kan ICollection zijn ipv list omdat het voor een veel relatie
     //List geeft een harde koppeling omdat het uitgangspunt index based is wat niet nodig is voor een nav property
-    [NotMapped] 
-    public ICollection<Visitor>  Visitors { get; set; } = new List<Visitor>();
-    [NotMapped] 
+    public ICollection<Ticket>  Tickets { get; set; }
     public Organisation Organisation { get; set; }
  
     public Event() { }

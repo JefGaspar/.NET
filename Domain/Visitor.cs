@@ -26,9 +26,7 @@ namespace UI
 
         public string City { get; set; }
 
-        [NotMapped] 
-        public ICollection<Event> Events { get; set; } = new List<Event>();
-
+        public ICollection<Ticket> Tickets { get; set; }
         public Visitor() { }
 
         public Visitor(int visitorId, string firstName, string lastName, string email, string phoneNumber, string city)
