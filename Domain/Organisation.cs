@@ -15,12 +15,14 @@ public class Organisation
     // Relatie met events (een organisatie kan meerdere events organiseren)
     public ICollection<Event> Events { get; set; } = new List<Event>();
 
+    public Organisation() { }
+
     public Organisation(int orgId, string orgName, string orgDescription, DateOnly foundedDate, string contactEmail)
     {
         this.OrgId = orgId;
         this.OrgName = orgName;
         this.OrgDescription = orgDescription;
-        this.FoundedDate = FoundedDate;
+        this.FoundedDate = foundedDate;
         this.ContactEmail = contactEmail;
     }
 }

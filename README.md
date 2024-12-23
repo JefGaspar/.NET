@@ -47,3 +47,17 @@ SELECT "v"."VisitorId", "v"."City", "v"."Email", "v"."FirstName", "v"."LastName"
 FROM "Visitors" AS "v"
 ```
 
+### Sprint 4 
+
+```mermaid
+classDiagram
+    class Event
+    class Ticket
+    class Visitor
+    class Organisation
+    
+Visitor "1" -- "*" Ticket
+Ticket "*" -- "1" Event
+Event "*" -- "1" Organisation
+```
+

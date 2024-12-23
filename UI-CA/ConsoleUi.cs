@@ -74,7 +74,7 @@ public class ConsoleUi
     {
         Console.WriteLine("\nAll events:");
         Console.WriteLine("=========================");
-        foreach (var evnt in _manager.GetAllEvents()) //event kan niet worden gebruikt als var omdat het een gereserveerd woord is
+        foreach (var evnt in _manager.GetAllEventsWithOrganisation()) 
         {
             Console.WriteLine(evnt.ToStringEvent());
         }
@@ -123,7 +123,7 @@ public class ConsoleUi
     {
         Console.WriteLine("\nAll visitors:");
         Console.WriteLine("=========================");
-        foreach (var visitor in _manager.GetAllVisitors())
+        foreach (var visitor in _manager.GetAllVisitorsWithEvents())
         {
             Console.WriteLine(visitor.ToStringVisitor());
         }

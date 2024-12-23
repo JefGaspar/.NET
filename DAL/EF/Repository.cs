@@ -77,6 +77,21 @@ public class Repository : IRepository
         _emDbContext.Organisations.Add(organisation);
         _emDbContext.SaveChanges();
     }
+
+    public IEnumerable<Event> ReadAllEventsWithOrganisation()
+    {
+        return _emDbContext.Events
+            .Include(e => e.Organisation) // Eager load de organisatie van elk event
+            .ToList();    }
+
+    public IEnumerable<Visitor> ReadAllVisitorsWithEvents()
+    {
+        return _emDbContext.Visitors
+            .Include(v => v.Tickets) // Laad de tickets van elke visitor
+            .ThenInclude(t => t.Event) // Laad de evenementen via de tickets
+            .ToList();
+        
+    }
 }
 
  

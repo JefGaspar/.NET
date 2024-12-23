@@ -85,6 +85,31 @@ namespace BL
             return newVisitor;
         }
 
+        public Organisation AddOrganisation(int orgId, string orgName, string orgDescription, DateOnly foundedDate, string contactEmai)
+        {
+            var newOrganisation = new Organisation
+            {
+                OrgId = orgId,
+                OrgName = orgName,
+                OrgDescription = orgDescription,
+                FoundedDate = foundedDate,
+                ContactEmail = contactEmai
+            };
+            
+            _repository.CreateOrganisation(newOrganisation);
+            return newOrganisation;
+        }
+
+        public IEnumerable<Event> GetAllEventsWithOrganisation()
+        {
+            return _repository.ReadAllEventsWithOrganisation();
+        }
+
+        public IEnumerable<Visitor> GetAllVisitorsWithEvents()
+        {
+            return _repository.ReadAllVisitorsWithEvents();
+        }
+
         private void ValidateObject(object obj)
         {
             var validationResults = new List<ValidationResult>();

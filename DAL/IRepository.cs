@@ -13,4 +13,6 @@ public interface IRepository
     public IEnumerable<Visitor> ReadVisitorsByNameOrCity(string firstName, string city);
     public void CreateVisitor(Visitor visitor);
     public void CreateOrganisation(Organisation organisation);
+    public IEnumerable<Event> ReadAllEventsWithOrganisation();
+    public IEnumerable<Visitor> ReadAllVisitorsWithEvents();
 }

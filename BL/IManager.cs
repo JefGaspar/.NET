@@ -13,7 +13,11 @@ namespace BL
         public IEnumerable<Visitor> GetAllVisitors();
         public IEnumerable<Visitor> GetVisitorsByNameOrCity(string firstName, string city);
         public Visitor AddVisitor(string firstName, string lastName, string email, string phoneNumber, string city);
-    }
+        public Organisation AddOrganisation(int orgId, string orgName, string orgDescription, DateOnly foundedDate, string contactEmai);
+        public IEnumerable<Event> GetAllEventsWithOrganisation();
+        public IEnumerable<Visitor> GetAllVisitorsWithEvents();
+    } 
+    
 }
 
 //3 niveau's waarop we interfaces gebruiken in onze architectuur
