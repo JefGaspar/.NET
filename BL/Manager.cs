@@ -13,12 +13,7 @@ namespace BL
         {
             _repository = repository;
         }
-
-        public Event GetEvent(int id)
-        {
-            return _repository.ReadEvent(id);
-        }
-
+        
         public IEnumerable<Event> GetAllEvents()
         {
             return _repository.ReadAllEvents();
@@ -48,12 +43,7 @@ namespace BL
             _repository.CreateEvent(newEvent);
             return newEvent;
         }
-
-
-        public Visitor GetVisitor(int id)
-        {
-            return _repository.ReadVisitor(id);
-        }
+        
 
         public IEnumerable<Visitor> GetAllVisitors()
         {
@@ -84,22 +74,7 @@ namespace BL
             _repository.CreateVisitor(newVisitor);
             return newVisitor;
         }
-
-        public Organisation AddOrganisation(int orgId, string orgName, string orgDescription, DateOnly foundedDate, string contactEmai)
-        {
-            var newOrganisation = new Organisation
-            {
-                OrgId = orgId,
-                OrgName = orgName,
-                OrgDescription = orgDescription,
-                FoundedDate = foundedDate,
-                ContactEmail = contactEmai
-            };
-            
-            _repository.CreateOrganisation(newOrganisation);
-            return newOrganisation;
-        }
-
+        
         public IEnumerable<Event> GetAllEventsWithOrganisation()
         {
             return _repository.ReadAllEventsWithOrganisation();
@@ -108,6 +83,37 @@ namespace BL
         public IEnumerable<Visitor> GetAllVisitorsWithEvents()
         {
             return _repository.ReadAllVisitorsWithEvents();
+        }
+
+        public Ticket AddTicket(Event evnt, Visitor visitor, DateTime purchaseDate, PurchaseMethode purchaseMethode)
+        {
+            if (_repository.GetTicket(evnt.EventId, visitor.VisitorId) != null)
+            {
+                throw new ValidationException("A ticket for this visitor and event already exists.");
+            }
+
+            var newTicket = new Ticket
+            {
+                Event = evnt,
+                Visitor = visitor,
+                PurchaseDate = purchaseDate,
+                PurchaseMethode = purchaseMethode
+            };
+            
+            ValidateObject(newTicket);
+            
+            _repository.CreateTicket(newTicket);
+            return newTicket;
+        }
+
+        public void RemoveTicket(int eventId, int visitorId)
+        {
+            _repository.DeleteTicket(eventId, visitorId);
+        }
+
+        public IEnumerable<Event> GetEventsOfVisitor(int visitorId)
+        {
+            return _repository.ReadEventsOfVisitor(visitorId);
         }
 
         private void ValidateObject(object obj)

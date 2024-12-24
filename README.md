@@ -14,7 +14,7 @@ classDiagram
     class Organisation
     
 Visitor "*" -- "*" Event
-Event "*" -- "1" Organisation
+Event "*" -- "0..1" Organisation
 ```
 
 
@@ -56,8 +56,8 @@ classDiagram
     class Visitor
     class Organisation
     
-Visitor "1" -- "*" Ticket
+Visitor "1" -- "0..*" Ticket
 Ticket "*" -- "1" Event
-Event "*" -- "1" Organisation
+Event "*" -- "0..1" Organisation
 ```
 

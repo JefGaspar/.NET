@@ -29,9 +29,8 @@ namespace UI
         public ICollection<Ticket> Tickets { get; set; }
         public Visitor() { }
 
-        public Visitor(int visitorId, string firstName, string lastName, string email, string phoneNumber, string city)
+        public Visitor(string firstName, string lastName, string email, string phoneNumber, string city)
         {
-            this.VisitorId = visitorId;
             this.FirstName = firstName;
             this.LastName = lastName;
             this.Email = email;

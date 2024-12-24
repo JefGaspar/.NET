@@ -12,7 +12,7 @@ internal static class VisitorExtentions
         {
             string eventInfo = string.Join(Environment.NewLine, visitor.Tickets
                 .Select(ticket => $"  - {ticket.Event.EventName} "));
-            return $"{baseInfo}{Environment.NewLine}{eventInfo}";
+            return $"{baseInfo}{Environment.NewLine}Events: {Environment.NewLine}{eventInfo}";
         }
         else
         {

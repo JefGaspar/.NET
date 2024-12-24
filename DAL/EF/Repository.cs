@@ -82,7 +82,8 @@ public class Repository : IRepository
     {
         return _emDbContext.Events
             .Include(e => e.Organisation) // Eager load de organisatie van elk event
-            .ToList();    }
+            .ToList();    
+    }
 
     public IEnumerable<Visitor> ReadAllVisitorsWithEvents()
     {
@@ -92,6 +93,31 @@ public class Repository : IRepository
             .ToList();
         
     }
+
+    public void CreateTicket(Ticket ticket)
+    {
+        _emDbContext.Tickets.Add(ticket);
+        _emDbContext.SaveChanges();
+    }
+
+    public Ticket GetTicket(int eventId, int visitorId)
+    {
+        return _emDbContext.Tickets.Find(eventId, visitorId);    
+    }
+
+    public void DeleteTicket(int eventId, int visitorId)
+    {
+        var ticket = _emDbContext.Tickets.Find(eventId, visitorId);
+        _emDbContext.Tickets.Remove(ticket);
+        _emDbContext.SaveChanges();
+    }
+
+    public IEnumerable<Event> ReadEventsOfVisitor(int visitorId)
+    {
+        return _emDbContext.Tickets
+            .Where(t => t.Visitor.VisitorId == visitorId)
+            .Select(t => t.Event)
+            .ToList();    }
 }
 
  

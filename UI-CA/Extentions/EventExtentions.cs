@@ -8,7 +8,7 @@ internal static class EventExtentions
     {
         string ticketPriceStr = evnt.TicketPrice.HasValue ? $"€{evnt.TicketPrice.Value:F2}" : "Free";
         string description = evnt.EventDescription ?? "No description available";
-        string organisationName = evnt.Organisation?.OrgName ?? "No organisation";
+        string organisationName = evnt.Organisation?.OrgName ?? "UNKNOWN";
 
 
         return

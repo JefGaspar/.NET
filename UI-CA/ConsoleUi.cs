@@ -1,9 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using BL;
-using EM.DAL;
 using EM.UI.CA.Extentions;
-using EM.DAL.EF;
-using Microsoft.EntityFrameworkCore;
+
 
 namespace UI;
 
@@ -48,6 +46,12 @@ public class ConsoleUi
                 case "6":
                     AddNewVisitor();
                     break;
+                case "7":
+                    CreateTicket();
+                    break;
+                case "8":
+                    DeleteTicket();
+                    break;
                 default:
                     Console.WriteLine("Invalid choice, please try again.");
                     break;
@@ -66,7 +70,9 @@ public class ConsoleUi
         Console.WriteLine("4) Show all visitors by name and/or city");
         Console.WriteLine("5) Add a new event");
         Console.WriteLine("6) Add a new visitor");
-        Console.Write("Choice (0-6): ");
+        Console.WriteLine("7) Add event to visitor");
+        Console.WriteLine("8) Remove event from visitor");
+        Console.Write("Choice (0-8): ");
     }
 
 
@@ -93,7 +99,7 @@ public class ConsoleUi
         if (int.TryParse(Console.ReadLine(), out int categoryIndex) && categoryIndex >= 1 && categoryIndex <= categories.Count)
         {
             var selectedCategory = categories[categoryIndex - 1];
-            var eventsInCategory = _manager.GetEventsByCategory(selectedCategory);
+            List<Event> eventsInCategory = _manager.GetEventsByCategory(selectedCategory).ToList();
 
             Console.WriteLine($"\nEvents in this category: {selectedCategory}");
             Console.WriteLine("=========================");
@@ -141,7 +147,7 @@ public class ConsoleUi
         Console.WriteLine("\nVisitors with matching search criteria:");
         Console.WriteLine("=========================");
 
-        var visitors = _manager.GetVisitorsByNameOrCity(firstNameInput, cityInput);
+        List<Visitor> visitors = _manager.GetVisitorsByNameOrCity(firstNameInput, cityInput).ToList();
         if (visitors.Any())
         {
             foreach (var visitor in visitors)
@@ -248,6 +254,162 @@ private void AddNewVisitor()
         // Voeg de nieuwe visitor toe via de manager
         var newVisitor = _manager.AddVisitor(firstName, lastName, email, phoneNumber, city);
         Console.WriteLine($"\nVisitor successfully added: {newVisitor.FirstName} {newVisitor.LastName}");
+    }
+    catch (ValidationException ex)
+    {
+        // Splits de foutmeldingen en toon ze met \n
+        var errorMessages = ex.Message.Split('|');
+        Console.WriteLine("Validation errors:");
+        foreach (var error in errorMessages)
+        {
+            Console.WriteLine($"- {error.Trim()}");
+        }
+    }
+    catch (FormatException ex)
+    {
+        Console.WriteLine($"Input error: {ex.Message}");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"An unexpected error occurred: {ex.Message}");
+    }
+    finally
+    {
+        // Terugkeren naar het menu
+        Console.WriteLine("Returning to the main menu...");
+    }
+}
+
+private void CreateTicket()
+{
+    try
+    {
+        Console.WriteLine("\nAdd an event to a visitor");
+        Console.WriteLine("============================");
+
+        //kies visitor
+        Console.WriteLine("\nSelect a visitor:");
+        List<Visitor> visitors = _manager.GetAllVisitors().ToList();
+        for (int i = 0; i < visitors.Count(); i++)
+        {
+            var visitor = visitors.ElementAt(i);
+            Console.WriteLine($"{i + 1}) {visitor.FirstName} {visitor.LastName}");
+        }
+        Console.Write("Visitor (choose number): ");
+        if (!int.TryParse(Console.ReadLine(), out int visitorIndex) || visitorIndex < 1 || visitorIndex > visitors.Count())
+        {
+            throw new ArgumentException("Invalid visitor selection.");
+
+        }
+        var selectedVisitor = visitors.ElementAt(visitorIndex - 1);
+
+        //kies event
+        Console.WriteLine("\nSelect an event:");
+        List<Event> events = _manager.GetAllEvents().ToList();
+        for (int i = 0; i < events.Count(); i++)
+        {
+            var evnt = events.ElementAt(i);
+            Console.WriteLine($"{i + 1}) {evnt.EventName} ({evnt.EventDate:yyyy-MM-dd HH:mm})");
+
+        }
+        Console.Write("Event (choose number): ");
+        if (!int.TryParse(Console.ReadLine(), out int eventIndex) || eventIndex < 1 || eventIndex > events.Count())
+        {
+            throw new ArgumentException("Invalid event selection.");
+        }
+        var selectedEvent = events.ElementAt(eventIndex - 1);
+        
+        // Kies PurchaseMethod
+        Console.WriteLine("\nSelect purchase method:");
+        var methodes = Enum.GetValues(typeof(PurchaseMethode)).Cast<PurchaseMethode>().ToList();
+        for (int i = 0; i < methodes.Count; i++)
+        {
+            Console.WriteLine($"{i + 1}) {methodes[i]}");
+        }
+        Console.Write("Purchase method (choose number): ");
+        if (!int.TryParse(Console.ReadLine(), out int purchaseMethodIndex) || (purchaseMethodIndex > methodes.Count))
+        {
+            throw new ArgumentException("Invalid purchase method selection.");
+        }
+        var selectedMethod = methodes[purchaseMethodIndex - 1];
+
+
+        _manager.AddTicket(selectedEvent, selectedVisitor, DateTime.Now, selectedMethod);
+        Console.WriteLine($"\nTicket successfully created for {selectedVisitor.FirstName} {selectedVisitor.LastName} to {selectedEvent.EventName}");
+    }
+    catch (ValidationException ex)
+    {
+        // Splits de foutmeldingen en toon ze met \n
+        var errorMessages = ex.Message.Split('|');
+        Console.WriteLine("Validation errors:");
+        foreach (var error in errorMessages)
+        {
+            Console.WriteLine($"- {error.Trim()}");
+        }
+    }
+    catch (FormatException ex)
+    {
+        Console.WriteLine($"Input error: {ex.Message}");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"An unexpected error occurred: {ex.Message}");
+    }
+    finally
+    {
+        // Terugkeren naar het menu
+        Console.WriteLine("Returning to the main menu...");
+    }
+}
+
+public void DeleteTicket()
+{
+    try
+    {
+        Console.WriteLine("\nRemove a ticket");
+        Console.WriteLine("============================");
+
+        // Kies een Visitor
+        Console.WriteLine("\nSelect a visitor:");
+        List<Visitor> visitors = _manager.GetAllVisitors().ToList();
+        for (int i = 0; i < visitors.Count(); i++)
+        {
+            var visitor = visitors.ElementAt(i);
+            Console.WriteLine($"{i + 1}) {visitor.FirstName} {visitor.LastName}");
+        }
+        
+        Console.Write("Visitor (choose number): ");
+        if (!int.TryParse(Console.ReadLine(), out int visitorIndex) || visitorIndex < 1 || visitorIndex > visitors.Count())
+        {
+            throw new ArgumentException("Invalid visitor selection.");
+        }
+        var selectedVisitor = visitors.ElementAt(visitorIndex - 1);
+        
+        // Kies een Event van de geselecteerde Visitor
+        Console.WriteLine("\nSelect an event to remove:");
+        List<Event> events = _manager.GetEventsOfVisitor(selectedVisitor.VisitorId).ToList();
+        if (!events.Any())
+        {
+            Console.WriteLine("This visitor has no events to remove.");
+            return;
+        }
+
+        for (int i = 0; i < events.Count(); i++)
+        {
+            var evnt = events.ElementAt(i);
+            Console.WriteLine($"{i + 1}) {evnt.EventName} ({evnt.EventDate:yyyy-MM-dd HH:mm})");
+        }
+        
+        Console.Write("Event (choose number): ");
+        if (!int.TryParse(Console.ReadLine(), out int eventIndex) || eventIndex < 1 || eventIndex > events.Count())
+        {
+            throw new ArgumentException("Invalid event selection.");
+        }
+        var selectedEvent = events.ElementAt(eventIndex - 1);
+
+        // Verwijder het ticket via de manager
+        _manager.RemoveTicket(selectedEvent.EventId, selectedVisitor.VisitorId);
+        Console.WriteLine($"\nTicket successfully removed for {selectedVisitor.FirstName} {selectedVisitor.LastName} from {selectedEvent.EventName}");
     }
     catch (ValidationException ex)
     {

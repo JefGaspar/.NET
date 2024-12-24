@@ -17,9 +17,8 @@ public class Organisation
 
     public Organisation() { }
 
-    public Organisation(int orgId, string orgName, string orgDescription, DateOnly foundedDate, string contactEmail)
+    public Organisation(string orgName, string orgDescription, DateOnly foundedDate, string contactEmail)
     {
-        this.OrgId = orgId;
         this.OrgName = orgName;
         this.OrgDescription = orgDescription;
         this.FoundedDate = foundedDate;

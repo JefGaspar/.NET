@@ -27,9 +27,8 @@ public class Event
  
     public Event() { }
 
-    public Event(int eventId, string eventName, string eventDescription,  DateTime eventDate, decimal? ticketPrice, EventCategory category = EventCategory.Sport)
+    public Event( string eventName, string eventDescription,  DateTime eventDate, decimal? ticketPrice, EventCategory category = EventCategory.Sport)
     {
-        this.EventId = eventId;
         this.EventName = eventName;
         this.EventDescription = eventDescription;
         this.Category = category;
