@@ -1,9 +1,9 @@
-using UI;
+using EM.BL.Domain;
 
 namespace EM.DAL.EF;
 public static class DataSeeder
 {
-    public static void Seed(EMDbContext context)
+    public static void Seed(EmDbContext context)
     {
         // Controleer of de database al gegevens bevat
         if (context.Events.Any() || context.Visitors.Any() || context.Tickets.Any())
@@ -19,9 +19,9 @@ public static class DataSeeder
 
         // Voeg bezoekers toe met constructors
         Visitor stan = new Visitor("Stan", "Schins", "stanschins@gmail.com", "0484710770", "Antwerpen");
-        Visitor emma = new Visitor("Emma", "Jones", "emma.jones@example.com", "0475123456", "Gent");
-        Visitor lucas = new Visitor("Lucas", "Baker", "lucas.baker@example.com", "0476987654", "Brussel");
-        Visitor olivia = new Visitor("Olivia", "Smith", "olivia.smith@example.com", "0476112233", "Antwerpen");
+        Visitor emma = new Visitor("Emma", "Jones", "emma.jones@gmail.com", "0475123456", "Gent");
+        Visitor lucas = new Visitor("Lucas", "Baker", "lucas.baker@hotmail.com", "0476987654", "Brussel");
+        Visitor olivia = new Visitor("Olivia", "Smith", "olivia.smith@gmail.com", "0476112233", "Antwerpen");
 
         Organisation techSphere = new Organisation("TechSphere Innovations", "Leading provider of cutting-edge technology solutions, specializing in AI and cloud computing.", new DateOnly(2010, 4, 15), "contact@techsphere.com");
         Organisation greenFuture = new Organisation("GreenFuture Initiatives", "A non-profit organization dedicated to promoting sustainability and renewable energy projects.", new DateOnly(2005, 8, 23), "info@greenfuture.org");
@@ -30,11 +30,11 @@ public static class DataSeeder
         Organisation futureTech = new Organisation("FutureTech Solutions", "Innovative solutions provider specializing in robotics and automation for industries.", new DateOnly(2015, 6, 20), "info@futuretech.com");
 
         // Voeg tickets toe
-        Ticket studayT856 = new Ticket { Event = studay, Visitor = stan, PurchaseDate = DateTime.Now.AddDays(-10), PurchaseMethode = PurchaseMethode.Online};
-        Ticket studayT711 = new Ticket { Event = studay, Visitor = emma, PurchaseDate = DateTime.Now.AddDays(-5), PurchaseMethode = PurchaseMethode.AtTheDoor};
-        Ticket techExpoT522 = new Ticket { Event = techExpo, Visitor = lucas, PurchaseDate = DateTime.Now.AddDays(-20), PurchaseMethode = PurchaseMethode.Online };
-        Ticket musicFestT333 = new Ticket { Event = musicFest, Visitor = emma, PurchaseDate = DateTime.Now.AddDays(-2), PurchaseMethode = PurchaseMethode.AtTheDoor };
-        Ticket businessSummitT122 = new Ticket { Event = businessSummit, Visitor = emma, PurchaseDate = DateTime.Now.AddDays(-3), PurchaseMethode = PurchaseMethode.AtTheDoor };
+        Ticket studayT856 = new Ticket { Event = studay, Visitor = stan, PurchaseDate = new DateTime(2024,06,22,15,22,36), PurchaseMethode = PurchaseMethode.Online};
+        Ticket studayT711 = new Ticket { Event = studay, Visitor = emma, PurchaseDate = new DateTime(2024, 09, 18, 16, 32, 10), PurchaseMethode = PurchaseMethode.AtTheDoor};
+        Ticket techExpoT522 = new Ticket { Event = techExpo, Visitor = lucas, PurchaseDate = new DateTime(2024, 11, 05, 10, 12, 55), PurchaseMethode = PurchaseMethode.AtTheDoor };
+        Ticket musicFestT333 = new Ticket { Event = musicFest, Visitor = emma, PurchaseDate =  new DateTime(2024,1,19,8,8,10), PurchaseMethode = PurchaseMethode.Online };
+        Ticket businessSummitT122 = new Ticket { Event = businessSummit, Visitor = emma, PurchaseDate = new DateTime(2024,10,9,18,28,15), PurchaseMethode = PurchaseMethode.Online };
 
         // Koppel organisaties aan evenementen
         studay.Organisation = techSphere;

@@ -1,0 +1,32 @@
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model IEnumerable<EM.BL.Domain.Event>
+
+@{
+    ViewData["Title"] = "All Events";
+}
+
+<h1>All Events</h1>
+
+<table class="table table-striped">
+    <thead>
+    <tr>
+        <th>Title</th>
+        <th>Date</th>
+        <th>Price</th>
+        <th>Category</th>
+        <th>Details</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var evnt in Model)
+    {
+        <tr>
+            <td>@evnt.EventName</td>
+            <td>@evnt.EventDate.ToString("dd/MM/yyyy HH:mm")</td>
+            <td>@(evnt.TicketPrice.HasValue ? $"€{evnt.TicketPrice.Value:F2}" : "Free")</td>
+            <td>@evnt.Category</td>
+            <td><a asp-action="Details" asp-route-id="@evnt.EventId">Details</a></td>
+        </tr>
+    }
+    </tbody>
+</table>

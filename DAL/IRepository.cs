@@ -1,10 +1,11 @@
-using UI;
+using EM.BL.Domain;
 
 namespace EM.DAL;
 
 public interface IRepository
 {
     public Event ReadEvent(int id);
+    public Event ReadEventWithVisitors(int id);
     public IEnumerable<Event> ReadAllEvents();
     public IEnumerable<Event> ReadEventsByCategory(EventCategory category);
     public void CreateEvent(Event evnt);

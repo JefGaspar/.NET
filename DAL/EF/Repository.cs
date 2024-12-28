@@ -1,13 +1,13 @@
+using EM.BL.Domain;
 using Microsoft.EntityFrameworkCore;
-using UI;
 
 namespace EM.DAL.EF;
 
 public class Repository : IRepository
 {
-    private readonly EMDbContext _emDbContext;
+    private readonly EmDbContext _emDbContext;
 
-    public Repository(EMDbContext context)
+    public Repository(EmDbContext context)
     {
         _emDbContext = context;
     }
@@ -18,6 +18,13 @@ public class Repository : IRepository
         return _emDbContext.Events.Find(id);
     }
 
+    public Event ReadEventWithVisitors(int id)
+    {
+        return _emDbContext.Events
+            .Include(e => e.Tickets)
+            .ThenInclude(t => t.Visitor)
+            .SingleOrDefault(e => e.EventId == id);
+    }
     public IEnumerable<Event> ReadAllEvents()
     {
         return _emDbContext.Events.ToList();

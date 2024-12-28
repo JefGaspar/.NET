@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace UI;
+namespace EM.BL.Domain;
 
 public class Ticket
 {

@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
-namespace UI;
+namespace EM.BL.Domain;
 
 public class Organisation
 {
@@ -13,7 +12,7 @@ public class Organisation
     public string ContactEmail { get; set; }
     
     // Relatie met events (een organisatie kan meerdere events organiseren)
-    public ICollection<Event> Events { get; set; } = new List<Event>();
+    public ICollection<Event> Events { get; set; }
 
     public Organisation() { }
 

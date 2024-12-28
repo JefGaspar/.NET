@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
+using EM.BL.Domain;
 using EM.DAL;
-using UI; 
 
-namespace BL
+namespace EM.BL
 {
     public class Manager : IManager
     {
@@ -19,6 +19,16 @@ namespace BL
             return _repository.ReadAllEvents();
         }
 
+        public Event GetEvent(int id)
+        {
+            return _repository.ReadEvent(id);
+        }
+
+        public Event GetEventWithVisitors(int id)
+        {
+            return _repository.ReadEventWithVisitors(id);
+        }
+        
         public IEnumerable<Event> GetEventsByCategory(EventCategory category)
         {
             return _repository.ReadEventsByCategory(category);
@@ -44,6 +54,10 @@ namespace BL
             return newEvent;
         }
         
+        public Visitor GetVisitor(int id)
+        {
+            return _repository.ReadVisitor(id);
+        }
 
         public IEnumerable<Visitor> GetAllVisitors()
         {
@@ -122,7 +136,7 @@ namespace BL
             var validationContext = new ValidationContext(obj);
 
             // Valideer standaard attributen
-            bool isValid = Validator.TryValidateObject(obj, validationContext, validationResults, validateAllProperties: true);
+            //bool isValid = Validator.TryValidateObject(obj, validationContext, validationResults, validateAllProperties: true);
 
             // Controleer of het object IValidatableObject implementeert
             if (obj is IValidatableObject validatable)

@@ -1,9 +1,9 @@
 using System.ComponentModel.DataAnnotations;
-using BL;
+using EM.BL;
+using EM.BL.Domain;
 using EM.UI.CA.Extentions;
 
-
-namespace UI;
+namespace EM.UI.CA;
 
 public class ConsoleUi
 {

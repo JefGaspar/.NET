@@ -1,13 +1,16 @@
-using UI;
+using EM.BL.Domain;
 
-namespace BL
+namespace EM.BL
 {
     public interface IManager
     {
         //IEnumerable ipv list omdat u BL niet index based waarden moet doorgeven aan UI, isoleren van archtectuur
         public IEnumerable<Event> GetAllEvents();
+        public Event GetEvent(int id);
+        public Event GetEventWithVisitors(int id);
         public IEnumerable<Event> GetEventsByCategory(EventCategory category);
         public Event AddEvent(string name, DateTime date, decimal? ticketPrice, string description, EventCategory category);
+        public Visitor GetVisitor(int id);
         public IEnumerable<Visitor> GetAllVisitors();
         public IEnumerable<Visitor> GetVisitorsByNameOrCity(string firstName, string city);
         public Visitor AddVisitor(string firstName, string lastName, string email, string phoneNumber, string city);

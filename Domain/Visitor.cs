@@ -1,9 +1,6 @@
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
-namespace UI
+namespace EM.BL.Domain
 {
     public class Visitor : IValidatableObject
     {

@@ -1,4 +1,4 @@
-# Event Manager - Project .NET Framework
+# Event Management - Project .NET Framework
 
 * Naam: Jef Gaspar
 * Studentennummer: 0163118-61

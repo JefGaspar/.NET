@@ -1,4 +1,4 @@
-namespace UI;
+namespace EM.BL.Domain;
 
 //omzetten naar byte zodat de enum klasse niet zo zwaar moet zijn,
 //anders is het 32 bit(int), te veel voor enum

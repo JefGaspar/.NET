@@ -1,11 +1,11 @@
 using System.Diagnostics;
+using EM.BL.Domain;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
-using UI;
 
 namespace EM.DAL.EF;
 
-public class EMDbContext : DbContext
+public class EmDbContext : DbContext
 {
     /*
      *constuructor accepteert parameter van type DbContextOptions en roept
@@ -14,7 +14,7 @@ public class EMDbContext : DbContext
      * informatie staat over hoe de context geconfigureerd moet worden,
      * zoals welke DBprovider zoals SQlite
      */
-    public EMDbContext(DbContextOptions options) : base(options)
+    public EmDbContext(DbContextOptions options) : base(options)
     {
     }
     //Dbset<Event> geeft aan dat Event een tabel is in de DB
