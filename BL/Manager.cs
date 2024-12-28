@@ -98,6 +98,10 @@ namespace EM.BL
         {
             return _repository.ReadAllVisitorsWithEvents();
         }
+        public IEnumerable<Event> GetEventsByVisitor(int visitorId)
+        {
+            return _repository.ReadEventsByVisitor(visitorId);
+        }
 
         public Ticket AddTicket(Event evnt, Visitor visitor, DateTime purchaseDate, PurchaseMethode purchaseMethode)
         {
@@ -129,6 +133,26 @@ namespace EM.BL
         {
             return _repository.ReadEventsOfVisitor(visitorId);
         }
+
+        public IEnumerable<Organisation> GetAllOrganisations()
+        {
+            return _repository.ReadAllOrganisations();
+        }
+
+        public Organisation AddOrganisation(string orgName, string orgDescription, DateOnly foundedDate, string contactEmail)
+        {
+            var newOrganisation = new Organisation
+            {
+                OrgName = orgName,
+                OrgDescription = orgDescription,
+                FoundedDate = foundedDate,
+                ContactEmail = contactEmail
+            };
+
+            _repository.CreateOrganisation(newOrganisation);
+            return newOrganisation;
+        }
+
 
         private void ValidateObject(object obj)
         {

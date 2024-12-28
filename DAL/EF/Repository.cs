@@ -100,6 +100,15 @@ public class Repository : IRepository
             .ToList();
         
     }
+    
+    public IEnumerable<Event> ReadEventsByVisitor(int visitorId)
+    {
+        return _emDbContext.Tickets
+            .Where(t => t.Visitor.VisitorId == visitorId)
+            .Select(t => t.Event)
+            .ToList();
+    }
+
 
     public void CreateTicket(Ticket ticket)
     {
@@ -125,6 +134,12 @@ public class Repository : IRepository
             .Where(t => t.Visitor.VisitorId == visitorId)
             .Select(t => t.Event)
             .ToList();    }
+
+    public IEnumerable<Organisation> ReadAllOrganisations()
+    {
+        return _emDbContext.Organisations.ToList();
+    }
+
 }
 
  

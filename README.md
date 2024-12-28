@@ -61,3 +61,43 @@ Ticket "*" -- "1" Event
 Event "*" -- "0..1" Organisation
 ```
 
+## Sprint 6
+
+### Nieuwe organisatie
+
+#### Request
+
+```http request
+POST https://localhost:7212/api/Organisations
+Content-Type: application/json
+
+{
+  "orgName": "New Organisation",
+  "orgDescription": "This is a test organisation.",
+  "foundedDate": "2024-12-28",
+  "contactEmail": "test@organisation.com"
+}
+```
+#### Response
+```http request
+HTTP/2 201 Created
+content-type: application/json; charset=utf-8
+date: Sat, 28 Dec 2024 20:55:51 GMT
+server: Kestrel
+location: https://localhost:7212/api/Organisations?id=6
+x-http2-stream-id: 3
+transfer-encoding: chunked
+
+{
+  "orgId": 6,
+  "orgName": "New Organisation",
+  "orgDescription": "This is a test organisation.",
+  "foundedDate": "2024-12-28",
+  "contactEmail": "test@organisation.com",
+  "events": null
+}
+Response file saved.
+> 2024-12-28T215552.201.json
+
+```
+

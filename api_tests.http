@@ -1,0 +1,10 @@
+### Add a new organisation
+POST https://localhost:7212/api/Organisations
+Content-Type: application/json
+
+{
+  "orgName": "New Organisation",
+  "orgDescription": "This is a test organisation.",
+  "foundedDate": "2024-12-28",
+  "contactEmail": "test@organisation.com"
+}

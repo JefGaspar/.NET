@@ -21,3 +21,51 @@
         <dd class="col-sm-10">@Model.City</dd>
     </dl>
 </div>
+
+<h3>Events</h3>
+<table id="eventTable" class="table table-striped">
+    <thead>
+        <tr>
+            <th>Event Name</th>
+            <th>Date</th>
+            <th>Category</th>
+            <th>Ticket Price</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- JavaScript vult deze tabel dynamisch -->
+    </tbody>
+</table>
+
+<input type="hidden" id="visitorId" value="@Model.VisitorId" />
+
+@section Scripts {
+    <script>
+        async function fetchEventsForVisitor(visitorId) {
+            const response = await fetch(`/api/Visitors/${visitorId}/Events`);
+            if (response.ok) {
+                const events = await response.json();
+                const tableBody = document.getElementById('eventTable').querySelector('tbody');
+                tableBody.innerHTML = ''; // Maak de tabel leeg voordat je nieuwe data toevoegt
+
+                events.forEach(event => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${event.eventName}</td>
+                        <td>${new Date(event.eventDate).toLocaleDateString()}</td>
+                        <td>${event.category}</td>
+                        <td>${event.ticketPrice ? `€${event.ticketPrice.toFixed(2)}` : "Free"}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } else {
+                console.error('Failed to fetch events for the visitor.');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const visitorId = document.getElementById('visitorId').value;
+            fetchEventsForVisitor(visitorId);
+        });
+    </script>
+}

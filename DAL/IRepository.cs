@@ -12,6 +12,8 @@ public interface IRepository
     public Visitor ReadVisitor(int id);
     public IEnumerable<Visitor> ReadAllVisitors();
     public IEnumerable<Visitor> ReadVisitorsByNameOrCity(string firstName, string city);
+    public IEnumerable<Event> ReadEventsByVisitor(int visitorId);
+
     public void CreateVisitor(Visitor visitor);
     public void CreateOrganisation(Organisation organisation);
     public IEnumerable<Event> ReadAllEventsWithOrganisation();
@@ -20,4 +22,6 @@ public interface IRepository
     public Ticket GetTicket(int eventId, int visitorId);
     public void DeleteTicket(int eventId, int visitorId);
     public IEnumerable<Event> ReadEventsOfVisitor(int visitorId);
+    IEnumerable<Organisation> ReadAllOrganisations();
+
 }
