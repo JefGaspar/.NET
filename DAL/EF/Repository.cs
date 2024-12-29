@@ -73,6 +73,14 @@ public class Repository : IRepository
         return query.ToList();
     }
 
+    public IEnumerable<Event> ReadEventsByVisitor(int visitorId)
+    {
+        return _emDbContext.Tickets
+            .Where(t => t.Visitor.VisitorId == visitorId)
+            .Select(t => t.Event)
+            .ToList();
+    }
+
     public void CreateVisitor(Visitor visitor)
     {
         _emDbContext.Visitors.Add(visitor);
@@ -101,13 +109,6 @@ public class Repository : IRepository
         
     }
     
-    public IEnumerable<Event> ReadEventsByVisitor(int visitorId)
-    {
-        return _emDbContext.Tickets
-            .Where(t => t.Visitor.VisitorId == visitorId)
-            .Select(t => t.Event)
-            .ToList();
-    }
 
 
     public void CreateTicket(Ticket ticket)
@@ -116,7 +117,7 @@ public class Repository : IRepository
         _emDbContext.SaveChanges();
     }
 
-    public Ticket GetTicket(int eventId, int visitorId)
+    public Ticket ReadTicket(int eventId, int visitorId)
     {
         return _emDbContext.Tickets.Find(eventId, visitorId);    
     }
@@ -128,12 +129,9 @@ public class Repository : IRepository
         _emDbContext.SaveChanges();
     }
 
-    public IEnumerable<Event> ReadEventsOfVisitor(int visitorId)
-    {
-        return _emDbContext.Tickets
-            .Where(t => t.Visitor.VisitorId == visitorId)
-            .Select(t => t.Event)
-            .ToList();    }
+
+    
+
 
     public IEnumerable<Organisation> ReadAllOrganisations()
     {

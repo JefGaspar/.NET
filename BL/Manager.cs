@@ -103,9 +103,9 @@ namespace EM.BL
             return _repository.ReadEventsByVisitor(visitorId);
         }
 
-        public Ticket AddTicket(Event evnt, Visitor visitor, DateTime purchaseDate, PurchaseMethode purchaseMethode)
+        /*public Ticket AddTicket(Event evnt, Visitor visitor, PaymentMethode paymentMethode)
         {
-            if (_repository.GetTicket(evnt.EventId, visitor.VisitorId) != null)
+            if (_repository.ReadTicket(evnt.EventId, visitor.VisitorId) != null)
             {
                 throw new ValidationException("A ticket for this visitor and event already exists.");
             }
@@ -114,12 +114,35 @@ namespace EM.BL
             {
                 Event = evnt,
                 Visitor = visitor,
-                PurchaseDate = purchaseDate,
-                PurchaseMethode = purchaseMethode
+                PurchaseDate = DateTime.Now, // Automatisch de huidige datum en tijd
+                PaymentMethode = paymentMethode
             };
             
             ValidateObject(newTicket);
             
+            _repository.CreateTicket(newTicket);
+            return newTicket;
+        }
+*/
+        public Ticket AddTicket(int eventId, int visitorId, PaymentMethode paymentMethode)
+        {
+            var evnt = _repository.ReadEvent(eventId) ?? throw new Exception("Event not found.");
+            var visitor = _repository.ReadVisitor(visitorId) ?? throw new Exception("Visitor not found.");
+
+            if (_repository.ReadTicket(eventId, visitorId) != null)
+            {
+                throw new ValidationException("A ticket for this visitor and event already exists.");
+            }
+
+            var newTicket = new Ticket
+            {
+                Event = evnt,
+                Visitor = visitor,
+                PurchaseDate = DateTime.Now,
+                PaymentMethode = paymentMethode
+            };
+
+            ValidateObject(newTicket);
             _repository.CreateTicket(newTicket);
             return newTicket;
         }
@@ -129,9 +152,12 @@ namespace EM.BL
             _repository.DeleteTicket(eventId, visitorId);
         }
 
-        public IEnumerable<Event> GetEventsOfVisitor(int visitorId)
+       
+        public IEnumerable<Event> GetAvailableEventsForVisitor(int visitorId)
         {
-            return _repository.ReadEventsOfVisitor(visitorId);
+            var allEvents = _repository.ReadAllEvents();
+            var visitorEvents = _repository.ReadEventsByVisitor(visitorId);
+            return allEvents.Except(visitorEvents);
         }
 
         public IEnumerable<Organisation> GetAllOrganisations()

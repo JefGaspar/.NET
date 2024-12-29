@@ -1,6 +1,6 @@
 namespace EM.BL.Domain;
 
-public enum PurchaseMethode : byte
+public enum PaymentMethode : byte
 {
     Online,
     AtTheDoor

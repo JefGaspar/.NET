@@ -19,9 +19,8 @@ public interface IRepository
     public IEnumerable<Event> ReadAllEventsWithOrganisation();
     public IEnumerable<Visitor> ReadAllVisitorsWithEvents();
     public void CreateTicket(Ticket ticket);
-    public Ticket GetTicket(int eventId, int visitorId);
+    public Ticket ReadTicket(int eventId, int visitorId);
     public void DeleteTicket(int eventId, int visitorId);
-    public IEnumerable<Event> ReadEventsOfVisitor(int visitorId);
     IEnumerable<Organisation> ReadAllOrganisations();
 
 }

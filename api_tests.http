@@ -8,3 +8,6 @@ Content-Type: application/json
   "foundedDate": "2024-12-28",
   "contactEmail": "test@organisation.com"
 }
+
+### vul events checkbox
+GET https://localhost:7212/api/Visitors/3/AvailableEvents

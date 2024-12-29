@@ -18,9 +18,12 @@ namespace EM.BL
         public Visitor AddVisitor(string firstName, string lastName, string email, string phoneNumber, string city);
         public IEnumerable<Event> GetAllEventsWithOrganisation();
         public IEnumerable<Visitor> GetAllVisitorsWithEvents();
-        public Ticket AddTicket(Event evnt, Visitor visitor, DateTime purchaseDate, PurchaseMethode purchaseMethode);
+        //public Ticket AddTicket(Event evnt, Visitor visitor, PaymentMethode paymentMethode);
+        public Ticket AddTicket(int eventId, int visitorId, PaymentMethode paymentMethode);
+
         public void RemoveTicket(int eventId, int visitorId);
-        public IEnumerable<Event> GetEventsOfVisitor(int visitorId);
+        public IEnumerable<Event> GetAvailableEventsForVisitor(int visitorId);
+
         IEnumerable<Organisation> GetAllOrganisations();
 
         public Organisation AddOrganisation(string orgName, string orgDescription, DateOnly foundedDate,

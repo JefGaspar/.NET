@@ -30,11 +30,11 @@ public static class DataSeeder
         Organisation futureTech = new Organisation("FutureTech Solutions", "Innovative solutions provider specializing in robotics and automation for industries.", new DateOnly(2015, 6, 20), "info@futuretech.com");
 
         // Voeg tickets toe
-        Ticket studayT856 = new Ticket { Event = studay, Visitor = stan, PurchaseDate = new DateTime(2024,06,22,15,22,36), PurchaseMethode = PurchaseMethode.Online};
-        Ticket studayT711 = new Ticket { Event = studay, Visitor = emma, PurchaseDate = new DateTime(2024, 09, 18, 16, 32, 10), PurchaseMethode = PurchaseMethode.AtTheDoor};
-        Ticket techExpoT522 = new Ticket { Event = techExpo, Visitor = lucas, PurchaseDate = new DateTime(2024, 11, 05, 10, 12, 55), PurchaseMethode = PurchaseMethode.AtTheDoor };
-        Ticket musicFestT333 = new Ticket { Event = musicFest, Visitor = emma, PurchaseDate =  new DateTime(2024,1,19,8,8,10), PurchaseMethode = PurchaseMethode.Online };
-        Ticket businessSummitT122 = new Ticket { Event = businessSummit, Visitor = emma, PurchaseDate = new DateTime(2024,10,9,18,28,15), PurchaseMethode = PurchaseMethode.Online };
+        Ticket studayT856 = new Ticket { Event = studay, Visitor = stan, PurchaseDate = new DateTime(2024,06,22,15,22,36), PaymentMethode = PaymentMethode.Online};
+        Ticket studayT711 = new Ticket { Event = studay, Visitor = emma, PurchaseDate = new DateTime(2024, 09, 18, 16, 32, 10), PaymentMethode = PaymentMethode.AtTheDoor};
+        Ticket techExpoT522 = new Ticket { Event = techExpo, Visitor = lucas, PurchaseDate = new DateTime(2024, 11, 05, 10, 12, 55), PaymentMethode = PaymentMethode.AtTheDoor };
+        Ticket musicFestT333 = new Ticket { Event = musicFest, Visitor = emma, PurchaseDate =  new DateTime(2024,1,19,8,8,10), PaymentMethode = PaymentMethode.Online };
+        Ticket businessSummitT122 = new Ticket { Event = businessSummit, Visitor = emma, PurchaseDate = new DateTime(2024,10,9,18,28,15), PaymentMethode = PaymentMethode.Online };
 
         // Koppel organisaties aan evenementen
         studay.Organisation = techSphere;

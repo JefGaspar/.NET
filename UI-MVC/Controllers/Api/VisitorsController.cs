@@ -1,4 +1,5 @@
 using EM.BL;
+using EM.BL.Domain;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EM.UI.MVC.Controllers.Api;
@@ -23,5 +24,19 @@ public class VisitorsController: ControllerBase
         }
         return Ok(events);
     }
+
+    [HttpGet("{visitorId}/AvailableEvents")]
+    public IActionResult GetAvailableEventsForVisitor(int visitorId)
+    {
+            var availableEvents = _manager.GetAvailableEventsForVisitor(visitorId);
+            if (availableEvents == null || !availableEvents.Any())
+            {
+                return NotFound();
+            }
+            return Ok(availableEvents);
+    }
+
+
+
 
 }

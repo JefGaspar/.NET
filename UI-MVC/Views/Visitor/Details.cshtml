@@ -39,6 +39,25 @@
 
 <input type="hidden" id="visitorId" value="@Model.VisitorId" />
 
+<h3>Add Event</h3>
+<form id="addEventForm" class="mb-4">
+    <div class="form-group">
+        <label for="eventSelect">Select Event</label>
+        <select id="eventSelect" class="form-control">
+            <!-- JavaScript vult deze lijst dynamisch -->
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="paymentMethod">Payment Method</label>
+        <select id="paymentMethod" class="form-control">
+            <option value="Online">Online</option><!-- TODO: dynamisch maken-->
+            <option value="AtTheDoor">At The Door</option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Add Event to Visitor</button>
+</form>
+
+
 @section Scripts {
     <script>
         async function fetchEventsForVisitor(visitorId) {
@@ -62,10 +81,62 @@
                 console.error('Failed to fetch events for the visitor.');
             }
         }
+        
+        async function fetchAvailableEvents(visitorId) {
+            const response = await fetch(`/api/Visitors/${visitorId}/AvailableEvents`);
+            if (response.ok) {
+                const events = await response.json();
+                const eventSelect = document.getElementById("eventSelect");
+                eventSelect.innerHTML = ""; // Leeg de select-box
 
+                events.forEach(event => {
+                    const option = document.createElement("option");
+                    option.value = event.eventId;
+                    option.textContent = `${event.eventName} (${new Date(event.eventDate).toLocaleDateString()})`;
+                    eventSelect.appendChild(option);
+                });
+            } else {
+                console.error("Failed to fetch available events.");
+            }
+        }
+        
         document.addEventListener('DOMContentLoaded', () => {
             const visitorId = document.getElementById('visitorId').value;
             fetchEventsForVisitor(visitorId);
+            fetchAvailableEvents(visitorId);
         });
+
+        document.getElementById("addEventForm").addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            const visitorId = document.getElementById("visitorId").value; // Zorg dat je visitorId hebt
+            const eventId = document.getElementById("eventSelect").value;
+            const paymentMethod = document.getElementById("paymentMethod").value;
+
+            const payload = {
+                eventId: eventId,
+                visitorId: visitorId,
+                paymentMethod: paymentMethod // Enum: "Online" of "AtTheDoor"
+            };
+
+            const response = await fetch("/api/Tickets", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                console.log("Event added successfully.");
+                fetchEventsForVisitor(visitorId); // Ververs de tabel
+                fetchAvailableEvents(visitorId); // Ververs de select-box
+            } else {
+                console.error("Failed to add event.");
+            }
+});
+
     </script>
+    
+    
 }
+
+

@@ -319,22 +319,22 @@ private void CreateTicket()
         }
         var selectedEvent = events.ElementAt(eventIndex - 1);
         
-        // Kies PurchaseMethod
-        Console.WriteLine("\nSelect purchase method:");
-        var methodes = Enum.GetValues(typeof(PurchaseMethode)).Cast<PurchaseMethode>().ToList();
+        // Kies PaymentMethod
+        Console.WriteLine("\nSelect payment method:");
+        var methodes = Enum.GetValues(typeof(PaymentMethode)).Cast<PaymentMethode>().ToList();
         for (int i = 0; i < methodes.Count; i++)
         {
             Console.WriteLine($"{i + 1}) {methodes[i]}");
         }
         Console.Write("Purchase method (choose number): ");
-        if (!int.TryParse(Console.ReadLine(), out int purchaseMethodIndex) || (purchaseMethodIndex > methodes.Count))
+        if (!int.TryParse(Console.ReadLine(), out int paymentMethodIndex) || (paymentMethodIndex > methodes.Count))
         {
-            throw new ArgumentException("Invalid purchase method selection.");
+            throw new ArgumentException("Invalid payment method selection.");
         }
-        var selectedMethod = methodes[purchaseMethodIndex - 1];
+        var selectedMethod = methodes[paymentMethodIndex - 1];
 
 
-        _manager.AddTicket(selectedEvent, selectedVisitor, DateTime.Now, selectedMethod);
+        _manager.AddTicket(selectedEvent.EventId, selectedVisitor.VisitorId, selectedMethod);
         Console.WriteLine($"\nTicket successfully created for {selectedVisitor.FirstName} {selectedVisitor.LastName} to {selectedEvent.EventName}");
     }
     catch (ValidationException ex)
@@ -387,7 +387,7 @@ public void DeleteTicket()
         
         // Kies een Event van de geselecteerde Visitor
         Console.WriteLine("\nSelect an event to remove:");
-        List<Event> events = _manager.GetEventsOfVisitor(selectedVisitor.VisitorId).ToList();
+        List<Event> events = _manager.GetEventsByVisitor(selectedVisitor.VisitorId).ToList();
         if (!events.Any())
         {
             Console.WriteLine("This visitor has no events to remove.");
