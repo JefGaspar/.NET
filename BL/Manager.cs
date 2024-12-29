@@ -19,11 +19,7 @@ namespace EM.BL
             return _repository.ReadAllEvents();
         }
 
-        public Event GetEvent(int id)
-        {
-            return _repository.ReadEvent(id);
-        }
-
+        
         public Event GetEventWithVisitors(int id)
         {
             return _repository.ReadEventWithVisitors(id);
@@ -102,28 +98,7 @@ namespace EM.BL
         {
             return _repository.ReadEventsByVisitor(visitorId);
         }
-
-        /*public Ticket AddTicket(Event evnt, Visitor visitor, PaymentMethode paymentMethode)
-        {
-            if (_repository.ReadTicket(evnt.EventId, visitor.VisitorId) != null)
-            {
-                throw new ValidationException("A ticket for this visitor and event already exists.");
-            }
-
-            var newTicket = new Ticket
-            {
-                Event = evnt,
-                Visitor = visitor,
-                PurchaseDate = DateTime.Now, // Automatisch de huidige datum en tijd
-                PaymentMethode = paymentMethode
-            };
-            
-            ValidateObject(newTicket);
-            
-            _repository.CreateTicket(newTicket);
-            return newTicket;
-        }
-*/
+        
         public Ticket AddTicket(int eventId, int visitorId, PaymentMethode paymentMethode)
         {
             var evnt = _repository.ReadEvent(eventId) ?? throw new Exception("Event not found.");

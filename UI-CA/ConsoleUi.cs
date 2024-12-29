@@ -183,7 +183,7 @@ public class ConsoleUi
         Console.Write("Ticket Price (leave empty for free): ");
         string ticketPriceInput = Console.ReadLine();
         decimal? ticketPrice = string.IsNullOrEmpty(ticketPriceInput)
-            ? (decimal?)null
+            ? null
             : Convert.ToDecimal(ticketPriceInput);
 
         Console.WriteLine("Select Event Category:");

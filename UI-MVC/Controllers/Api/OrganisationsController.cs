@@ -24,14 +24,8 @@ public class OrganisationsController: ControllerBase
     }
     
     [HttpPost]
-    public IActionResult AddOrganisation([FromBody] Organisation newOrganisation)
+    public IActionResult AddOrganisation(Organisation newOrganisation)
     {
-        if (newOrganisation == null || string.IsNullOrWhiteSpace(newOrganisation.OrgName))
-        {
-            return BadRequest("Invalid organisation data.");
-        }
-
-        // Voeg het record toe via de manager
         var addedOrganisation = _manager.AddOrganisation(
             newOrganisation.OrgName,
             newOrganisation.OrgDescription,

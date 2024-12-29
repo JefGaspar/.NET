@@ -1,5 +1,7 @@
 using EM.BL.Domain;
 
+namespace EM.UI.MVC.Models.Dto;
+
 public class TicketDto
 {
     public int VisitorId { get; set; }

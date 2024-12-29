@@ -9,5 +9,3 @@ Content-Type: application/json
   "contactEmail": "test@organisation.com"
 }
 
-### vul events checkbox
-GET https://localhost:7212/api/Visitors/3/AvailableEvents

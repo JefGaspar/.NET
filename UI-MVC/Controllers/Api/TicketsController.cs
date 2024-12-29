@@ -1,4 +1,5 @@
 using EM.BL;
+using EM.UI.MVC.Models.Dto;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EM.UI.MVC.Controllers.Api;
@@ -14,14 +15,12 @@ public class TicketsController : ControllerBase
     }
     
     [HttpPost]
-    public IActionResult AddTicket([FromBody] TicketDto ticketDto)
+    public IActionResult AddTicket(TicketDto ticketDto)
     {
-        try
-        {
             // Voeg het ticket toe via de Manager
             var ticket = _manager.AddTicket(ticketDto.EventId, ticketDto.VisitorId, ticketDto.PaymentMethod);
 
-            // Maak een DTO van het aangemaakte ticket
+            // Maak een DTO van het aangemaakte ticket, om circulatie te voorkomen. kijk laatste les min 14
             var ticketResponseDto = new TicketDto
             {
                 VisitorId = ticket.Visitor.VisitorId,
@@ -31,11 +30,6 @@ public class TicketsController : ControllerBase
             };
 
             return Ok(ticketResponseDto);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { Message = ex.Message });
-        }
     }
 
     
