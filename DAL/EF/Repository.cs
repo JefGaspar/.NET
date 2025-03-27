@@ -43,6 +43,12 @@ public class Repository : IRepository
         _emDbContext.SaveChanges();
     }
 
+    public void UpdateEvent(Event evnt)
+    {
+        _emDbContext.Events.Update(evnt);
+        _emDbContext.SaveChanges();
+    }
+
     public Visitor ReadVisitor(int id)
     {
         return _emDbContext.Visitors.Find(id);
@@ -138,6 +144,7 @@ public class Repository : IRepository
         return _emDbContext.Organisations.ToList();
     }
 
+ 
 }
 
  

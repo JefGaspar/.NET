@@ -1,30 +1,72 @@
+@using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.Mvc.TagHelpers
-@model EM.BL.Domain.Event
-
+@model EM.UI.MVC.Models.EventDetailsViewModel
+@inject UserManager<IdentityUser> UserManager
+@inject SignInManager<IdentityUser> SignInManager
 @{
     ViewData["Title"] = "Event Details";
 }
 
-<h1>Event Details</h1>
+<h2 data-id="@Model.EventId">Event '@Model.EventName'</h2>
 
-<div>
-    <h2>@Model.EventName</h2>
-    <dl class="row">
-        <dt class="col-sm-2">Description</dt>
-        <dd class="col-sm-10">@Model.EventDescription</dd>
-
-        <dt class="col-sm-2">Date</dt>
-        <dd class="col-sm-10">@Model.EventDate.ToString("dd/MM/yyyy HH:mm")</dd>
-
-        <dt class="col-sm-2">Category</dt>
-        <dd class="col-sm-10">@Model.Category</dd>
-
-        <dt class="col-sm-2">Ticket Price</dt>
-        <dd class="col-sm-10">
-            @(Model.TicketPrice.HasValue ? $"€{Model.TicketPrice.Value:F2}" : "Free")
-        </dd>
-    </dl>
+<div class="text-center">
+    <h3 class="display-4">Event Details</h3>
 </div>
+
+<input type="hidden" id="eventId" value="@Model.EventId" />
+
+<table class="table">
+    <tr>
+        <th>Name</th>
+        <td>@Model.EventName</td>
+    </tr>
+    <tr>
+        <th>Description</th>
+        <td>@Model.EventDescription</td>
+    </tr>
+    <tr>
+        <th>Date</th>
+        <td>@Model.EventDate.ToString("dd/MM/yyyy HH:mm")</td>
+    </tr>
+    <tr>
+        <th>Category</th>
+        <td>@Model.Category</td>
+    </tr>
+    <tr>
+        <th>Ticket Price</th>
+        <td>
+            @{
+                var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                var user = await UserManager.FindByIdAsync(userId);
+                bool isAdmin = user != null && await UserManager.IsInRoleAsync(user, "Admin");
+            }
+            @if (SignInManager.IsSignedIn(User) && (userId == Model.MaintainedByUserId || isAdmin))
+            {
+                <input type="number" id="ticketPrice" value="@(Model.TicketPrice.HasValue ? Model.TicketPrice.Value.ToString("F2", System.Globalization.CultureInfo.InvariantCulture) : "0.00")" step="0.50" class="form-control d-inline-block w-auto" min="0" />
+            }
+            else
+            {
+                @(Model.TicketPrice.HasValue ? $"€{Model.TicketPrice.Value:F2}" : "Free")
+            }
+        </td>
+    </tr>
+    <tr>
+        <th>Maintained by</th>
+        <td>@Model.MaintainedByEmail</td>
+    </tr>
+</table>
+
+@if (SignInManager.IsSignedIn(User))
+{
+    if (userId == Model.MaintainedByUserId || isAdmin)
+    {
+        <button id="updatePriceButton" class="btn btn-primary">Update</button>
+    }
+    else
+    {
+        <p>Maintained by @Model.MaintainedByEmail</p>
+    }
+}
 
 <h3>Attendees</h3>
 @if (Model.Tickets != null && Model.Tickets.Any())
@@ -44,13 +86,13 @@
         @foreach (var ticket in Model.Tickets)
         {
             <tr>
-                <td>@ticket.Visitor.VisitorId</td>
-                <td>@ticket.Visitor.FirstName</td>
-                <td>@ticket.Visitor.LastName</td>
+                <td>@ticket.VisitorId</td>
+                <td>@ticket.FirstName</td>
+                <td>@ticket.LastName</td>
                 <td>@ticket.PurchaseDate.ToString("dd/MM/yyyy HH:mm:ss")</td>
                 <td>@ticket.PaymentMethode</td>
                 <td>
-                    <a asp-controller="Visitor" asp-action="Details" asp-route-id="@ticket.Visitor.VisitorId">Details</a>
+                    <a asp-controller="Visitor" asp-action="Details" asp-route-id="@ticket.VisitorId">Details</a>
                 </td>
             </tr>
         }
@@ -60,4 +102,8 @@
 else
 {
     <p>No attendees for this event.</p>
+}
+
+@section Scripts {
+    <script src="~/js/event/details.js" asp-append-version="true"></script>
 }

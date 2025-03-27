@@ -1,5 +1,6 @@
 using EM.BL;
 using EM.UI.MVC.Models.Dto;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EM.UI.MVC.Controllers.Api;
@@ -14,6 +15,7 @@ public class TicketsController : ControllerBase
         _manager = manager;
     }
     
+    [Authorize]
     [HttpPost]
     public IActionResult AddTicket(TicketDto ticketDto)
     {

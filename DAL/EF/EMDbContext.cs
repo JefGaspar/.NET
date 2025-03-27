@@ -2,10 +2,22 @@ using System.Diagnostics;
 using EM.BL.Domain;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+
 
 namespace EM.DAL.EF;
+/**
+ * De EmDbContext klasse fungeert als de databanklaag van de applicatie en:
 
-public class EmDbContext : DbContext
+1. Beheert de configuratie van de database.
+2. Definieert entiteiten en hun overeenkomstige database-tabellen.
+3. Stelt de relaties tussen de entiteiten expliciet in.
+4. Ondersteunt databasebeheer, zoals het (opnieuw) maken van een database.
+5. Integreert logging voor debuggen van database-activiteiten.
+
+Deze klasse is essentieel om te zorgen voor een duidelijke en gestructureerde interactie tussen de applicatiecode en de database.
+ */
+public class EmDbContext : IdentityDbContext
 {
     /*
      *constuructor accepteert parameter van type DbContextOptions en roept
@@ -53,10 +65,12 @@ public class EmDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        // Configureren van Ticket-entiteit
         modelBuilder.Entity<Ticket>()
             .Property<int>("fkEventId");
         modelBuilder.Entity<Ticket>()
             .Property<int>("fkVisitorId");
+        //vreemde sluitels op ticket instellen
         //Ticket * - 1 Event
         modelBuilder.Entity<Ticket>()
             .HasOne(t => t.Event)
@@ -70,6 +84,7 @@ public class EmDbContext : DbContext
             .HasForeignKey("fkVisitorId")
             .IsRequired();
 
+        //samengestelde primaire sleutel
         modelBuilder.Entity<Ticket>()
             .HasKey("fkEventId","fkVisitorId");
         

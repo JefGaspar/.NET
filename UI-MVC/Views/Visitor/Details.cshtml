@@ -38,24 +38,28 @@
 </table>
 
 <input type="hidden" id="visitorId" value="@Model.VisitorId" />
+@if (User.Identity.IsAuthenticated)
+{
+    <h3>Add Event</h3>
+    <form id="addEventForm" class="mb-4">
+        <div class="form-group">
+            <label for="eventSelect">Select Event</label>
+            <select id="eventSelect" class="form-control">
+                <!-- JavaScript vult deze lijst dynamisch -->
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="paymentMethod">Payment Method</label>
+            <select id="paymentMethod" class="form-control">
+                <option value="Online">Online</option>
+                <option value="AtTheDoor">At The Door</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Add Event to Visitor</button>
+    </form>
+    
+}
 
-<h3>Add Event</h3>
-<form id="addEventForm" class="mb-4">
-    <div class="form-group">
-        <label for="eventSelect">Select Event</label>
-        <select id="eventSelect" class="form-control">
-            <!-- JavaScript vult deze lijst dynamisch -->
-        </select>
-    </div>
-    <div class="form-group">
-        <label for="paymentMethod">Payment Method</label>
-        <select id="paymentMethod" class="form-control">
-            <option value="Online">Online</option>
-            <option value="AtTheDoor">At The Door</option>
-        </select>
-    </div>
-    <button type="submit" class="btn btn-primary">Add Event to Visitor</button>
-</form>
 
 @section Scripts {
     <script src="~/js/visitor/Details.js"></script>

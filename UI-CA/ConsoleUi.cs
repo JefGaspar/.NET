@@ -201,8 +201,8 @@ public class ConsoleUi
         EventCategory category = categories[categoryIndex - 1];
 
         // Voeg het nieuwe event toe via de manager
-        var newEvent = _manager.AddEvent(name, date, ticketPrice, description, category);
-        Console.WriteLine($"\nEvent successfully added: {newEvent.EventName}");
+       /* var newEvent = _manager.AddEvent(name, date, ticketPrice, description, category);
+        Console.WriteLine($"\nEvent successfully added: {newEvent.EventName}");*/
     }
     catch (ValidationException ex)
     {

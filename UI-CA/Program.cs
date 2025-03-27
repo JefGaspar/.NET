@@ -22,7 +22,7 @@ var consoleUi  = new ConsoleUi(manager);
 if (contxt.CreateDatabase(deleteIfExists: true))
 {
     Console.WriteLine("De databank is nieuw aangemaakt.");
-    DataSeeder.Seed(contxt);
+    /*DataSeeder.SeedAsync(contxt, )*/
 }
 else
 {

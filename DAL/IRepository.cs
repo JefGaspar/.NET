@@ -9,6 +9,7 @@ public interface IRepository
     public IEnumerable<Event> ReadAllEvents();
     public IEnumerable<Event> ReadEventsByCategory(EventCategory category);
     public void CreateEvent(Event evnt);
+    void UpdateEvent(Event evnt);
     public Visitor ReadVisitor(int id);
     public IEnumerable<Visitor> ReadAllVisitors();
     public IEnumerable<Visitor> ReadVisitorsByNameOrCity(string firstName, string city);

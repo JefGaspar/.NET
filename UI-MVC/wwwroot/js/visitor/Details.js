@@ -1,3 +1,15 @@
+/**
+ * async maakt de functie asynchroon wat betekent dat ik await kan gebruiken om te wachten operaties zoals API ophalen
+ * Fetch() roept de API endpoint aan, hier worden de events opgehaald van een bepaalde visitor
+ * await wacht dus toch fetch word aangeroepen en zal het resultaat opslaan in response
+ * response.ok geeft een 200-299 code mee om aan te tonen dat de aanroep succesvol was
+ * response.json convert de body van het htpp response naar JS object, events bevat nu een lijst eventen die gekoppeld zijn aan de visitor
+ * vervolgens wordt er gezocht naar een html element met id eventtable, de queryselector selecteert tbody waarin een tabel met de eventementen komt te staan
+ * tablebody wordt eerst leeg gegeven voordat er nieuwe gegevens in komen
+ * vervolgens wordt door events geitereerd en worden de juiste html elementen gecreerd. 
+ * tr voor een nieuwe rij met daarin de gegevens van het event.
+ * de rij wordt uiteindelijk toegevoegd aan tablebody met appendchild
+ */
 async function fetchEventsForVisitor(visitorId) {
     const response = await fetch(`/api/Visitors/${visitorId}/Events`);
     if (response.ok) {
@@ -38,12 +50,25 @@ async function fetchAvailableEvents(visitorId) {
     }
 }
 
+/**
+ * door DOMcontentloaded te gebruiken wordt er pas code uitgevoerd wanneer alle html elementen op de pagina beschikbaar zijn
+ * de waarde visitorid wordt opgehaald uit de hidden html element in de view
+ */
 document.addEventListener('DOMContentLoaded', () => {
     const visitorId = document.getElementById('visitorId').value;
     fetchEventsForVisitor(visitorId);
     fetchAvailableEvents(visitorId);
 });
 
+/**
+ * addEventForm wordt aangesproken, er wordt een listener op toegevoegd zodat de callbackfunctie bij elke submit wordt uitgevoerd
+ * de listener is async function dus we kunnen await gebruiken bij fetchen van http req
+ * e.preventDefault voorkomt dat het de standaard actie uitvoer, namelijk opsturen van gegevens naar server en pagina herladen
+ * vervolgens worden de nodige gegevens verzamelt om een nieuw ticket te maken
+ * payload wordt gemaakt zodat gegevens naar api gestuurd kunnen worden
+ * het http post verzoek wordt naar endpoint verzonden, payload wordt omgezet naar JSON string
+ * als alles succesvol was worden de lijst en selectbox ververst 
+ */
 document.getElementById("addEventForm").addEventListener("submit", async function (e) {
     e.preventDefault();
 

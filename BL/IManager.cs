@@ -6,9 +6,11 @@ namespace EM.BL
     {
         //IEnumerable ipv list omdat u BL niet index based waarden moet doorgeven aan UI, isoleren van archtectuur
         public IEnumerable<Event> GetAllEvents();
+        Event GetEvent(int id);
         public Event GetEventWithVisitors(int id);
         public IEnumerable<Event> GetEventsByCategory(EventCategory category);
-        public Event AddEvent(string name, DateTime date, decimal? ticketPrice, string description, EventCategory category);
+        public Event AddEvent(string name, DateTime date, decimal? ticketPrice, string description, EventCategory category, string userId);
+        void ChangeEvent(Event evnt); // Renamed from ChangeEvent
         public Visitor GetVisitor(int id);
         public IEnumerable<Visitor> GetAllVisitors();
         public IEnumerable<Visitor> GetVisitorsByNameOrCity(string firstName, string city);
@@ -21,7 +23,6 @@ namespace EM.BL
         public IEnumerable<Event> GetAvailableEventsForVisitor(int visitorId);
         IEnumerable<Organisation> GetAllOrganisations();
         public Organisation AddOrganisation(string orgName, string orgDescription, DateOnly foundedDate, string contactEmail);
-
     } 
     
 }

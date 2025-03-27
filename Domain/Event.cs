@@ -23,6 +23,9 @@ public class Event
     //List geeft een harde koppeling omdat het uitgangspunt index based is wat niet nodig is voor een nav property
     public ICollection<Ticket>  Tickets { get; set; }
     public Organisation Organisation { get; set; }
+    
+    // Foreign key to IdentityUser
+    public string UserId { get; set; } // This will link to IdentityUser.Id
  
     public Event() { }
 

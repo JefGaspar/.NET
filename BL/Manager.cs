@@ -19,6 +19,10 @@ namespace EM.BL
             return _repository.ReadAllEvents();
         }
 
+        public Event GetEvent(int id)
+        {
+            return _repository.ReadEvent(id);
+        }
         
         public Event GetEventWithVisitors(int id)
         {
@@ -30,7 +34,7 @@ namespace EM.BL
             return _repository.ReadEventsByCategory(category);
         }
 
-        public Event AddEvent(string name, DateTime date, decimal? ticketPrice, string description, EventCategory category)
+        public Event AddEvent(string name, DateTime date, decimal? ticketPrice, string description, EventCategory category, string userId)
         {
             // Maak het nieuwe Event object aan
             var newEvent = new Event
@@ -39,7 +43,8 @@ namespace EM.BL
                 EventDate = date,
                 TicketPrice = ticketPrice,
                 EventDescription = description,
-                Category = category
+                Category = category,
+                UserId = userId
             };
 
             // Valideer het nieuwe object
@@ -48,6 +53,12 @@ namespace EM.BL
             // Voeg het gevalideerde object toe via de repository
             _repository.CreateEvent(newEvent);
             return newEvent;
+        }
+        
+        public void ChangeEvent(Event evnt) // Renamed from ChangeEvent
+        {
+            ValidateObject(evnt);
+            _repository.UpdateEvent(evnt);
         }
         
         public Visitor GetVisitor(int id)
@@ -176,7 +187,8 @@ namespace EM.BL
                 throw new ValidationException($"{errors}");
             }
         }
-
+        
+      
     }
     
 }

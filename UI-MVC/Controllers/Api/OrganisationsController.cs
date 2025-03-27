@@ -1,11 +1,13 @@
 using EM.BL;
 using EM.BL.Domain;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace EM.UI.MVC.Controllers.Api;
 [Route("api/[controller]")]
 [ApiController]
+[Authorize] 
 public class OrganisationsController: ControllerBase
 {
     private readonly IManager _manager;
@@ -24,17 +26,24 @@ public class OrganisationsController: ControllerBase
     }
     
     [HttpPost]
-    public IActionResult AddOrganisation(Organisation newOrganisation)
+    public IActionResult AddOrganisation([FromBody] Organisation organisation)
     {
+        if (organisation == null)
+        {
+            return BadRequest("Organisation data is required.");
+        }
+
+        // Voeg de organisatie toe via de manager
         var addedOrganisation = _manager.AddOrganisation(
-            newOrganisation.OrgName,
-            newOrganisation.OrgDescription,
-            newOrganisation.FoundedDate,
-            newOrganisation.ContactEmail
+            organisation.OrgName,
+            organisation.OrgDescription,
+            organisation.FoundedDate,
+            organisation.ContactEmail
         );
 
-        // Return een response met status 201 (Created) en het nieuwe object
+        // Retourneer een 201 Created met de locatie van de nieuwe resource
         return CreatedAtAction(nameof(GetAllOrganisations), new { id = addedOrganisation.OrgId }, addedOrganisation);
     }
 
+   
 }

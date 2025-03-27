@@ -1,0 +1,65 @@
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@inject UserManager<IdentityUser> UserManager
+@inject SignInManager<IdentityUser> SignInManager
+@{
+    ViewData["Title"] = "Login";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Login</h1>
+</div>
+
+<form asp-action="Login" method="post">
+    <div asp-validation-summary="All" class="text-danger"></div>
+
+    <div class="form-group">
+        <label for="email" class="control-label">Email</label>
+        <input name="email" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label for="password" class="control-label">Password</label>
+        <input name="password" class="form-control" type="password" />
+    </div>
+
+    <div class="form-group mt-3">
+        <button type="submit" class="btn btn-primary">Login</button>
+    </div>
+</form>
+
+<h3>Available Users</h3>
+<table class="table table-striped">
+    <thead>
+    <tr>
+        <th>Email</th>
+        <th>Password</th>
+        <th>Role</th>
+    </tr>
+    </thead>
+    <tbody>
+    @{
+        var users = new[] { "user1@example.com", "user2@example.com", "user3@example.com", "user4@example.com", "user5@example.com" };
+        foreach (var email in users)
+        {
+            var user = await UserManager.FindByEmailAsync(email);
+            if (user != null)
+            {
+                var roles = await UserManager.GetRolesAsync(user);
+                var role = roles.FirstOrDefault() ?? "None";
+                <tr>
+                    <td>@email</td>
+                    <td>Password123!</td>
+                    <td>@role</td>
+                </tr>
+            }
+        }
+    }
+    </tbody>
+</table>
+
+<p>Don't have an account? <a asp-action="Register">Register here</a>.</p>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
