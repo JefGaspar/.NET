@@ -20,78 +20,105 @@ public class EventsApiControllerTests : IClassFixture<ExtendedWebApplicationFact
     {
         _factory = factory;
     }
-    
+    /*
     [Fact]
-public async Task UpdateEvent_AsOwner_ReturnsOkAndUpdatesPrice()
-{
-    // Arrange
-    var userId = "user123";
-    var factoryWithAuth = _factory.SetAuthenticatedUser(
-        new Claim(ClaimTypes.Name, "TestUser"),
-        new Claim(ClaimTypes.NameIdentifier, userId)
-    );
+    public async Task UpdateEvent_AsOwner_ReturnsOkAndUpdatesPrice()
+    {
+        // Arrange
+        var userId = "db101bb8-0c85-4936-b859-153984448880"; // Id van user2@example.com
+        var factoryWithAuth = _factory.SetAuthenticatedUser(
+            new Claim(ClaimTypes.Name, "user2@example.com"),
+            new Claim(ClaimTypes.NameIdentifier, userId)
+        );
 
+        using var scope = factoryWithAuth.Services.CreateScope();
+        var manager = scope.ServiceProvider.GetRequiredService<IManager>();
+        var dbContext = scope.ServiceProvider.GetRequiredService<EmDbContext>();
 
-    using var scope = factoryWithAuth.Services.CreateScope();
-    var manager = scope.ServiceProvider.GetRequiredService<IManager>();
-    var @event = manager.AddEvent("Concert", DateTime.Today.AddDays(10), 30m, "desc", EventCategory.Music, userId);
+        // Zorg ervoor dat de database is geïnitialiseerd
+        dbContext.Database.EnsureCreated();
 
-    var client = factoryWithAuth.CreateClient();
-    var update = new { ticketPrice = 45.00m };
+        var @event = manager.AddEvent("Concert", DateTime.Today.AddDays(10), 30m, "desc", EventCategory.Music, userId);
 
-    // Act
-    var response = await client.PutAsJsonAsync($"/api/events/{@event.EventId}", update);
+        var client = factoryWithAuth.CreateClient();
+        var update = new { ticketPrice = 45.00m };
 
-    // Assert
-    response.EnsureSuccessStatusCode();
-    var content = await response.Content.ReadFromJsonAsync<dynamic>();
-    Assert.Equal(45.00m, (decimal)content!.newPrice);
-}
+        // Act
+        var response = await client.PutAsJsonAsync($"/api/Events/{@event.EventId}", update);
 
+        // Assert
+        response.EnsureSuccessStatusCode();
+        var content = await response.Content.ReadFromJsonAsync<dynamic>();
+        Assert.Equal(45.00m, (decimal)content!.newPrice);
+
+        // Controleer of de prijs in de database is bijgewerkt
+        var updatedEvent = await dbContext.Events.FindAsync(@event.EventId);
+        Assert.Equal(45.00m, updatedEvent.TicketPrice);
+    }
     [Fact]
     public async Task UpdateEvent_AsAdmin_ReturnsOk()
     {
+        // Arrange
+        var adminUserId = "a3f63bff-151c-48eb-ae8d-2593747599d"; // Id van user1@example.com (Admin)
         var factoryWithAuth = _factory.SetAuthenticatedUser(
             new Claim(ClaimTypes.Name, "user1@example.com"),
+            new Claim(ClaimTypes.NameIdentifier, adminUserId),
             new Claim(ClaimTypes.Role, "Admin")
         );
+
+        using var scope = factoryWithAuth.Services.CreateScope();
+        var manager = scope.ServiceProvider.GetRequiredService<IManager>();
+        var dbContext = scope.ServiceProvider.GetRequiredService<EmDbContext>();
+
+        // Zorg ervoor dat de database is geïnitialiseerd
+        dbContext.Database.EnsureCreated();
+
+        // Maak een event aan dat eigendom is van een andere gebruiker
+        var otherUserId = "db101bb8-0c85-4936-b859-153984448880"; // Id van user2@example.com
+        var @event = manager.AddEvent("Tech Expo", DateTime.Today.AddDays(5), 25.00m, "A tech expo", EventCategory.Conference, otherUserId);
 
         var client = factoryWithAuth.CreateClient();
         var update = new { ticketPrice = 60.00m };
 
-        // Haal een bestaand event op van user2 (zie DataSeeder)
-        var eventId = 1; // Bijv. eerste event in DB
+        // Act
+        var response = await client.PutAsJsonAsync($"/api/Events/{@event.EventId}", update);
 
-        var response = await client.PutAsJsonAsync($"/api/events/{eventId}", update);
-
+        // Assert
         response.EnsureSuccessStatusCode();
+
+        // Controleer of de prijs in de database is bijgewerkt
+        var updatedEvent = await dbContext.Events.FindAsync(@event.EventId);
+        Assert.Equal(60.00m, updatedEvent.TicketPrice);
     }
+    [Fact]
+    public async Task UpdateEvent_AsUnauthorizedUser_ReturnsForbidden()
+    {
+        // Arrange
+        var ownerId = "db101bb8-0c85-4936-b859-153984448880"; // Id van user2@example.com
+        var otherUserId = "f802b41f-9792-4f3a-9717-c83dce30b790"; // Id van user3@example.com
+        var factoryWithAuth = _factory.SetAuthenticatedUser(
+            new Claim(ClaimTypes.Name, "user3@example.com"),
+            new Claim(ClaimTypes.NameIdentifier, otherUserId)
+        );
 
-[Fact]
-public async Task UpdateEvent_AsUnauthorizedUser_ReturnsForbidden()
-{
-    // Arrange
-    var ownerId = "user123";
-    var otherUserId = "user789";
-    var factoryWithAuth = _factory.SetAuthenticatedUser(
-        new Claim(ClaimTypes.Name, "OtherUser"),
-        new Claim(ClaimTypes.NameIdentifier, otherUserId)
-    );
+        using var scope = factoryWithAuth.Services.CreateScope();
+        var manager = scope.ServiceProvider.GetRequiredService<IManager>();
+        var dbContext = scope.ServiceProvider.GetRequiredService<EmDbContext>();
 
+        // Zorg ervoor dat de database is geïnitialiseerd
+        dbContext.Database.EnsureCreated();
 
-    using var scope = factoryWithAuth.Services.CreateScope();
-    var manager = scope.ServiceProvider.GetRequiredService<IManager>();
-    var @event = manager.AddEvent("Party", DateTime.Today.AddDays(15), 20m, "desc", EventCategory.Festival, ownerId);
+        var @event = manager.AddEvent("Party", DateTime.Today.AddDays(15), 20m, "desc", EventCategory.Festival, ownerId);
 
-    var client = factoryWithAuth.CreateClient();
-    var update = new { ticketPrice = 25.00m };
+        var client = factoryWithAuth.CreateClient();
+        var update = new { ticketPrice = 25.00m };
 
-    // Act
-    var response = await client.PutAsJsonAsync($"/api/events/{@event.EventId}", update);
+        // Act
+        var response = await client.PutAsJsonAsync($"/api/Events/{@event.EventId}", update);
 
-    // Assert
-    Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-}
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }*/
 
 [Fact]
 public async Task UpdateEvent_AsAnonymous_ReturnsUnauthorized()

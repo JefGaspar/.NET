@@ -28,6 +28,9 @@ public class EventsControllerTests : IClassFixture<ExtendedWebApplicationFactory
         var dbContext = scope.ServiceProvider.GetRequiredService<EmDbContext>();
         var manager = scope.ServiceProvider.GetRequiredService<IManager>();
 
+        // Zorg ervoor dat de database is geïnitialiseerd
+        dbContext.Database.EnsureCreated();
+
         var newEvent = manager.AddEvent(
             name: "Test Event",
             date: DateTime.Today.AddDays(5),
@@ -37,19 +40,20 @@ public class EventsControllerTests : IClassFixture<ExtendedWebApplicationFactory
             userId: "user123"
         );
 
+        // Controleer of het event in de database is opgeslagen
+        var savedEvent = await dbContext.Events.FindAsync(newEvent.EventId);
+        Assert.NotNull(savedEvent); // Zorg ervoor dat het event bestaat
+        Assert.Equal("Test Event", savedEvent.EventName);
+
         // Maak een HTTP-client
         var client = _factory.CreateClient();
 
         // Act
-        var response = await client.GetAsync($"/Events/Details/{newEvent.EventId}");
+        var response = await client.GetAsync($"/Event/Details/{newEvent.EventId}");
 
         // Assert
         response.EnsureSuccessStatusCode(); // Status Code 200-299
         Assert.Equal("text/html", response.Content.Headers.ContentType.MediaType);
-
-        // Controleer of het resultaat een ViewResult is met het juiste model
-        // (Dit vereist dat we de response body uitlezen en deserialiseren, wat complex is voor HTML.
-        // Voor nu vertrouwen we op de statuscode en content-type.)
     }
 
     [Fact]
