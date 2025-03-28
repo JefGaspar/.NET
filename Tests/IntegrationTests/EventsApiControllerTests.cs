@@ -22,39 +22,35 @@ public class EventsApiControllerTests : IClassFixture<ExtendedWebApplicationFact
     }
     /*
     [Fact]
-    public async Task UpdateEvent_AsOwner_ReturnsOkAndUpdatesPrice()
+    public async Task UpdateSeededEvent_AsOwner_ReturnsOkAndUpdatesPrice()
     {
         // Arrange
-        var userId = "db101bb8-0c85-4936-b859-153984448880"; // Id van user2@example.com
-        var factoryWithAuth = _factory.SetAuthenticatedUser(
-            new Claim(ClaimTypes.Name, "user2@example.com"),
-            new Claim(ClaimTypes.NameIdentifier, userId)
-        );
+        var client = _factory
+            .SetAuthenticatedUser(
+                new Claim(ClaimTypes.Name, "user2@example.com")
+            )
+            .CreateClient();
 
-        using var scope = factoryWithAuth.Services.CreateScope();
-        var manager = scope.ServiceProvider.GetRequiredService<IManager>();
-        var dbContext = scope.ServiceProvider.GetRequiredService<EmDbContext>();
-
-        // Zorg ervoor dat de database is geïnitialiseerd
-        dbContext.Database.EnsureCreated();
-
-        var @event = manager.AddEvent("Concert", DateTime.Today.AddDays(10), 30m, "desc", EventCategory.Music, userId);
-
-        var client = factoryWithAuth.CreateClient();
-        var update = new { ticketPrice = 45.00m };
+        var update = new { ticketPrice = 55.00m };
+        int seededEventId = 2; // Tech Expo (bijv.)
 
         // Act
-        var response = await client.PutAsJsonAsync($"/api/Events/{@event.EventId}", update);
+        var response = await client.PutAsJsonAsync($"/api/events/{seededEventId}", update);
 
         // Assert
         response.EnsureSuccessStatusCode();
-        var content = await response.Content.ReadFromJsonAsync<dynamic>();
-        Assert.Equal(45.00m, (decimal)content!.newPrice);
+        var responseJson = await response.Content.ReadFromJsonAsync<Dictionary<string, object>>();
+        Assert.Equal(55.00m, Convert.ToDecimal(responseJson["newPrice"]));
 
-        // Controleer of de prijs in de database is bijgewerkt
-        var updatedEvent = await dbContext.Events.FindAsync(@event.EventId);
-        Assert.Equal(45.00m, updatedEvent.TicketPrice);
+        // Check DB
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<EmDbContext>();
+        var updatedEvent = await db.Events.FindAsync(seededEventId);
+        Assert.Equal(55.00m, updatedEvent.TicketPrice);
     }
+
+
+
     [Fact]
     public async Task UpdateEvent_AsAdmin_ReturnsOk()
     {
@@ -119,7 +115,6 @@ public class EventsApiControllerTests : IClassFixture<ExtendedWebApplicationFact
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }*/
-
 [Fact]
 public async Task UpdateEvent_AsAnonymous_ReturnsUnauthorized()
 {

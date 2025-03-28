@@ -10,11 +10,11 @@ using Tests.IntegrationTests.Config;
 
 namespace Tests.IntegrationTests;
 
-public class ManagerTests : IClassFixture<EventWebApplicationFactory<Program>>
+public class ManagerTests : IClassFixture<ExtendedWebApplicationFactoryWithMockAuth<Program>>
 {
-    private readonly EventWebApplicationFactory<Program> _factory;
+    private readonly ExtendedWebApplicationFactoryWithMockAuth<Program> _factory;
 
-    public ManagerTests(EventWebApplicationFactory<Program> factory)
+    public ManagerTests(ExtendedWebApplicationFactoryWithMockAuth<Program> factory)
     {
         _factory = factory;
     }
