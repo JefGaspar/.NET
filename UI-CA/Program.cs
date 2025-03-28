@@ -18,14 +18,6 @@ IRepository repository = new Repository(contxt);
 IManager manager = new Manager(repository);
 var consoleUi  = new ConsoleUi(manager);
 
-// Roep CreateDatabase aan en controleer of de database nieuw werd aangemaakt
-if (contxt.CreateDatabase(deleteIfExists: true))
-{
-    Console.WriteLine("De databank is nieuw aangemaakt.");
-    /*DataSeeder.SeedAsync(contxt, )*/
-}
-else
-{
-    Console.WriteLine("De databank bestond al en bleef behouden.");
-}
+
+
 consoleUi.Run();

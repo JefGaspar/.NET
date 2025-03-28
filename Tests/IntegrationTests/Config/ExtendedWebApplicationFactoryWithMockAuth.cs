@@ -130,9 +130,8 @@ public class ExtendedWebApplicationFactoryWithMockAuth<TProgram>
             IOptionsMonitor<AuthenticationSchemeOptions> options,
             ILoggerFactory logger,
             UrlEncoder encoder,
-            ISystemClock clock
-        )
-            : base(options, logger, encoder, clock)
+            TimeProvider timeProvider) // Gebruik TimeProvider
+            : base(options, logger, encoder)
         {
             _claimSeed = claimSeed;
         }
