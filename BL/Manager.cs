@@ -172,7 +172,7 @@ namespace EM.BL
             var validationContext = new ValidationContext(obj);
 
             // Valideer standaard attributen
-            //bool isValid = Validator.TryValidateObject(obj, validationContext, validationResults, validateAllProperties: true);
+            Validator.TryValidateObject(obj, validationContext, validationResults, validateAllProperties: true);
 
             // Controleer of het object IValidatableObject implementeert
             if (obj is IValidatableObject validatable)

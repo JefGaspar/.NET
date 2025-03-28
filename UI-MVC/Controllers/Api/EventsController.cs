@@ -21,6 +21,8 @@ namespace EM.UI.MVC.Controllers.Api
             _manager = manager;
             _userManager = userManager;
         }
+        
+    
 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateEvent(int id, [FromBody] UpdateEventPriceDto model)

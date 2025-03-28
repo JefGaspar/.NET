@@ -4,6 +4,7 @@ namespace EM.BL.Domain;
 
 public class Ticket
 {
+    
     [Required]
     [Key]
     public Event Event { get; set; }

@@ -1,3 +1,4 @@
+
 using System.Diagnostics;
 using EM.BL.Domain;
 using Microsoft.Extensions.Logging;
@@ -37,14 +38,17 @@ public class EmDbContext : IdentityDbContext
     public DbSet<Ticket> Tickets { get; set; }
     
     
-    public bool CreateDatabase(bool deleteIfExists = false)
+    public static bool CreateDatabase(EmDbContext context)
     {
-        // Controleer of de databank moet worden verwijderd
-        if (deleteIfExists)
+        const bool doDropDatabase = true;
+        if (doDropDatabase)
         {
-            Database.EnsureDeleted();
+            context.Database.EnsureDeleted();
         }
-        return Database.EnsureCreated();
+        
+        bool isDbCreated = context.Database.EnsureCreated();
+        
+        return isDbCreated;
     }
     
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

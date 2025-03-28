@@ -76,29 +76,34 @@ builder.Services.AddScoped<DataSeeder>();
 
 var app = builder.Build();
 
-// Seed the database
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    var context = services.GetRequiredService<EmDbContext>();
-    var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
-    var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
 
-    var dataSeeder = new DataSeeder(context, userManager);
-    await dataSeeder.SeedAsync();
+    using (var scope = app.Services.CreateScope())
+    {
+        var services = scope.ServiceProvider;
+        var context = services.GetRequiredService<EmDbContext>();
+        bool isDatabaseCreated = EmDbContext.CreateDatabase(context);
+        if (isDatabaseCreated)
+        {
+            var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
+            var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+          
 
-    var identitySeeder = new IdentitySeeder(userManager, roleManager);
-    await identitySeeder.SeedAsync();
-}
+            var dataSeeder = new DataSeeder(context, userManager);
+            await dataSeeder.SeedAsync();
+
+            var identitySeeder = new IdentitySeeder(userManager, roleManager);
+            await identitySeeder.SeedAsync(); 
+        }
+        
+    }
+
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
-
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
