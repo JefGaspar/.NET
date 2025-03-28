@@ -1,0 +1,68 @@
+# Definieer de stages
+stages:
+  - build
+  - test
+
+# Gebruik een .NET SDK image
+image: mcr.microsoft.com/dotnet/sdk:8.0
+
+# Variabelen voor herbruikbaarheid
+variables:
+  OBJECTS_DIRECTORY: 'obj'
+  NUGET_PACKAGES_DIRECTORY: '.nuget'
+  SOURCE_CODE_PATH: '*/'
+  TEST_PROJECT_PATH: 'Tests'
+  TEST_RESULTS_PATH: 'test-results.xml'
+  COVERAGE_DIR: 'coverage'
+
+# Cache NuGet-pakketten en build-bestanden
+cache:
+  key: "$CI_COMMIT_REF_SLUG"
+  paths:
+    - '$SOURCE_CODE_PATH$OBJECTS_DIRECTORY/project.assets.json'
+    - '$SOURCE_CODE_PATH$OBJECTS_DIRECTORY/*.csproj.nuget.*'
+    - '$NUGET_PACKAGES_DIRECTORY'
+  policy: pull-push
+
+# Voer restore uit vóór alle jobs
+before_script:
+  - 'dotnet restore --packages $NUGET_PACKAGES_DIRECTORY'
+
+# Build stage: compileer het project
+build_job:
+  stage: build
+  script:
+    - 'dotnet build --no-restore'
+  artifacts:
+    paths:
+      - bin/
+      - obj/
+    expire_in: 1 day
+
+# Test stage: voer tests uit en genereer rapporten
+test_job:
+  stage: test
+  dependencies:
+    - build_job
+  script:
+    # Voer tests uit met JUnit logger en verzamel code coverage
+    - 'dotnet test $TEST_PROJECT_PATH --no-restore --logger "junit;LogFilePath=$TEST_RESULTS_PATH;MethodFormat=Class;FailureBodyFormat=Verbose" --collect:"XPlat Code Coverage" --results-directory $COVERAGE_DIR'
+    # Installeer de reportgenerator tool
+    - 'dotnet tool install -g dotnet-reportgenerator-globaltool'
+    # Genereer een HTML-rapport van de code coverage
+    - 'reportgenerator -reports:"$COVERAGE_DIR/*/coverage.cobertura.xml" -targetdir:"coveragereport" -reporttypes:Html'
+    # Extract coverage percentage voor GitLab UI
+    - 'COVERAGE_VALUE=$(grep -oPm 1 "line-rate=\"\K([0-9.]+)" "$COVERAGE_DIR/*/coverage.cobertura.xml")'
+    - 'COVERAGE=$(echo "scale=2; $COVERAGE_VALUE * 100" | bc)'
+    - 'echo "TOTAL_COVERAGE=$COVERAGE%"'
+  coverage: '/TOTAL_COVERAGE=(\d+.\d+)/'
+  artifacts:
+    paths:
+      - $TEST_RESULTS_PATH
+      - coveragereport/
+    reports:
+      junit: $TEST_RESULTS_PATH
+      coverage_report:
+        coverage_format: cobertura
+        path: $COVERAGE_DIR/*/coverage.cobertura.xml
+    expire_in: 1 week
