@@ -47,14 +47,20 @@ test_job:
   script:
     # Voer tests uit met JUnit logger en verzamel code coverage
     - 'dotnet test $TEST_PROJECT_PATH --no-restore --logger "junit;LogFilePath=$TEST_RESULTS_PATH;MethodFormat=Class;FailureBodyFormat=Verbose" --collect:"XPlat Code Coverage" --results-directory $COVERAGE_DIR'
+    # Controleer of het JUnit-rapport bestaat
+    - 'ls -la $TEST_RESULTS_PATH || echo "JUnit report not found!"'
     # Installeer de reportgenerator tool
     - 'dotnet tool install -g dotnet-reportgenerator-globaltool'
     # Voeg het pad naar dotnet tools toe aan PATH
     - 'export PATH="$PATH:/root/.dotnet/tools"'
     # Genereer een HTML-rapport van de code coverage
     - 'reportgenerator -reports:"$COVERAGE_DIR/*/coverage.cobertura.xml" -targetdir:"coveragereport" -reporttypes:Html'
+    # Vind het exacte pad naar coverage.cobertura.xml
+    - 'COVERAGE_FILE=$(find $COVERAGE_DIR -type f -name "coverage.cobertura.xml" | head -n 1)'
+    # Controleer of het coverage bestand bestaat
+    - 'ls -la $COVERAGE_FILE || echo "Coverage file not found!"'
     # Extract coverage percentage voor GitLab UI
-    - 'COVERAGE_VALUE=$(grep -oPm 1 "line-rate=\"\K([0-9.]+)" "$COVERAGE_DIR/*/coverage.cobertura.xml")'
+    - 'COVERAGE_VALUE=$(grep -oPm 1 "line-rate=\"\K([0-9.]+)" "$COVERAGE_FILE")'
     - 'COVERAGE=$(echo "scale=2; $COVERAGE_VALUE * 100" | bc)'
     - 'echo "TOTAL_COVERAGE=$COVERAGE%"'
   coverage: '/TOTAL_COVERAGE=(\d+.\d+)/'
