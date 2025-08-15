@@ -5,13 +5,14 @@ stages: [build, test]
 variables:
   DOTNET_CLI_TELEMETRY_OPTOUT: "1"
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true"
-  # NuGet-cache in de repo, zodat caching werkt
+
+  # NuGet-cache in repo (sneller)
   NUGET_PACKAGES: "$CI_PROJECT_DIR/.nuget/packages"
 
   BUILD_CONFIGURATION: "Release"
-  TEST_RESULTS_FILE: "test-results.xml"
-  COVERAGE_DIR: "coverage"
-  COVERAGE_FILE: "coverage/coverage.cobertura.xml"
+  TEST_RESULTS_FILE: "test-results.xml"             # JUnit output (vast pad)
+  COVERAGE_DIR: "coverage"                          # directory voor dotnet test output
+  COVERAGE_FILE: "coverage/coverage.cobertura.xml"  # vast pad voor GitLab coverage_report
 
 cache:
   key: "$CI_COMMIT_REF_SLUG"
@@ -20,7 +21,7 @@ cache:
   policy: pull-push
 
 before_script:
-  # ⛔️ geen -c hier; restore heeft geen configuration
+  # restore kent geen -c/--configuration
   - dotnet restore EventManager.sln
 
 build:
@@ -37,30 +38,44 @@ test:
   stage: test
   needs: ["build"]
   script:
-    - dotnet test EventManager.sln --no-build -c $BUILD_CONFIGURATION \
-      --logger "junit;LogFilePath=$TEST_RESULTS_FILE;MethodFormat=Class;FailureBodyFormat=Verbose" \
-      --collect:"XPlat Code Coverage" \
-      --results-directory $COVERAGE_DIR
+    - set -eo pipefail
 
-    # Zet 1 vast Cobertura-bestand voor GitLab
-    - COVERAGE_XML=$(find "$COVERAGE_DIR" -type f -name "coverage.cobertura.xml" | head -n 1)
-    - test -f "$COVERAGE_XML" || (echo "Coverage file not found!" && exit 1)
-    - mkdir -p "$(dirname "$COVERAGE_FILE")"
-    - cp "$COVERAGE_XML" "$COVERAGE_FILE"
+    # 1) Tests draaien (solution). Schrijf JUnit rapport en Cobertura coverage.
+    #    We vangen de exitcode op zodat we ARTIFACTS blijven genereren.
+    - |
+      dotnet test EventManager.sln --no-build -c $BUILD_CONFIGURATION \
+        --logger "junit;LogFilePath=$TEST_RESULTS_FILE;MethodFormat=Class;FailureBodyFormat=Verbose" \
+        --collect:"XPlat Code Coverage" \
+        --results-directory $COVERAGE_DIR \
+      || TEST_EXIT=$?
+      echo "TEST_EXIT=${TEST_EXIT:=0}"
 
-    # HTML coverage rapport
+    # 2) Laat zien wat er is aangemaakt (debug-vriendelijk)
+    - echo "--- produced files (first 3 levels) ---"
+    - find . -maxdepth 3 -type f -name "*.xml" -o -name "*.html" -print
+
+    # 3) Zet Cobertura op een vast pad (GitLab accepteert hier geen wildcards)
+    - COVERAGE_XML=$(find "$COVERAGE_DIR" -type f -name "coverage.cobertura.xml" | head -n 1 || true)
+    - if [ -n "$COVERAGE_XML" ]; then mkdir -p "$(dirname "$COVERAGE_FILE")"; cp "$COVERAGE_XML" "$COVERAGE_FILE"; else echo "Coverage file not found!"; fi
+
+    # 4) HTML coverage rapport (alleen als Cobertura is gevonden)
     - dotnet tool install -g dotnet-reportgenerator-globaltool
     - export PATH="$PATH:/root/.dotnet/tools"
-    - reportgenerator -reports:"$COVERAGE_FILE" -targetdir:"coveragereport" -reporttypes:Html
+    - if [ -f "$COVERAGE_FILE" ]; then reportgenerator -reports:"$COVERAGE_FILE" -targetdir:"coveragereport" -reporttypes:Html; fi
 
-    # Coverage % in joblog (voor 'coverage:' regex)
-    - echo "TOTAL_COVERAGE=$(grep -oPm1 'line-rate=\"\\K[0-9.]+' "$COVERAGE_FILE" | awk '{printf \"%.2f\", $1*100}')%"
+    # 5) Coverage % in joblog (voor 'coverage:' regex). Alleen als file bestaat.
+    - if [ -f "$COVERAGE_FILE" ]; then echo "TOTAL_COVERAGE=$(grep -oPm1 'line-rate=\"\\K[0-9.]+' "$COVERAGE_FILE" | awk '{printf "%.2f", $1*100}')%"; fi
+
+    # 6) Geef de oorspronkelijke test-exitcode terug (pipeline faalt bij falende tests)
+    - exit ${TEST_EXIT:=0}
 
   coverage: '/TOTAL_COVERAGE=(\d+\.\d+)%/'
   artifacts:
+    when: always                 # ⬅️ upload artifacts zelfs als de tests faalden
     expire_in: 1 week
     paths:
-      - coveragereport/
+      - coveragereport/          # HTML (CSS/JS)
+      - $TEST_RESULTS_FILE       # losse JUnit file (handig)
     reports:
       junit: $TEST_RESULTS_FILE
       coverage_report:
