@@ -86,13 +86,14 @@ var app = builder.Build();
         {
             var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
             var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-          
+            
+            var identitySeeder = new IdentitySeeder(userManager, roleManager);
+            await identitySeeder.SeedAsync(); 
 
             var dataSeeder = new DataSeeder(context, userManager);
             await dataSeeder.SeedAsync();
 
-            var identitySeeder = new IdentitySeeder(userManager, roleManager);
-            await identitySeeder.SeedAsync(); 
+           
         }
         
     }

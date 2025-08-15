@@ -1,183 +1,195 @@
+using System;
+using System.Security.Claims;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Xunit;
+
 using EM.BL;
 using EM.BL.Domain;
 using EM.UI.MVC.Controllers;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Microsoft.AspNetCore.Identity;
 
-namespace Tests.UnitTests;
-
-public class EventControllerUnitTests
+namespace Tests.UnitTests
 {
-    [Fact]
-    public async Task Add_GivenValidEvent_RedirectsToDetails()
+    public class EventControllerUnitTests
     {
-        // Arrange
-        var mockManager = new Mock<IManager>();
-        var mockUserManager = new Mock<UserManager<IdentityUser>>(
-            Mock.Of<IUserStore<IdentityUser>>(), null, null, null, null, null, null, null, null);
-        
-        var controller = new EventController(mockManager.Object, mockUserManager.Object);
-
-        var newEvent = new Event
+        [Fact]
+        public async Task Add_ShouldRedirectToDetails_WhenModelValidAndUserFound()
         {
-            EventName = "New Event",
-            EventDate = DateTime.Today.AddDays(10),
-            TicketPrice = 30.00m,
-            EventDescription = "A new event",
-            Category = EventCategory.Music
-        };
+            // Arrange
+            var mockManager = new Mock<IManager>(MockBehavior.Strict);
+            var mockUserMgr = new Mock<UserManager<IdentityUser>>(
+                Mock.Of<IUserStore<IdentityUser>>(), null, null, null, null, null, null, null, null);
 
-        var userId = "user123";
-        var identityUser = new IdentityUser { Id = userId };
+            var controller = new EventController(mockManager.Object, mockUserMgr.Object);
 
-        // Simuleer een ingelogde gebruiker
-        var user = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, userId) }, "mock"));
-        controller.ControllerContext = new ControllerContext
+            var newEvent = new Event
+            {
+                EventName = "New Event",
+                EventDate = DateTime.Today.AddDays(10),
+                TicketPrice = 30m,
+                EventDescription = "A new event",
+                Category = EventCategory.Music
+            };
+
+            var userId = "user123";
+            var identityUser = new IdentityUser { Id = userId };
+
+            // simulate authenticated user
+            var user = new ClaimsPrincipal(new ClaimsIdentity(
+                new[] { new Claim(ClaimTypes.NameIdentifier, userId) }, "mock"));
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            mockUserMgr.Setup(um => um.GetUserAsync(user)).ReturnsAsync(identityUser);
+            mockManager.Setup(m => m.AddEvent(
+                newEvent.EventName,
+                newEvent.EventDate,
+                newEvent.TicketPrice,
+                newEvent.EventDescription,
+                newEvent.Category,
+                userId
+            )).Returns(new Event { EventId = 1, EventName = newEvent.EventName });
+
+            // Act
+            var result = await controller.Add(newEvent);
+
+            // Assert
+            var redirect = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("Details", redirect.ActionName);
+            Assert.Equal(1, redirect.RouteValues["id"]);
+            mockManager.VerifyAll(); // verification: AddEvent exact één keer met juiste args
+        }
+
+        [Fact]
+        public async Task Add_ShouldReturnViewWithModelError_WhenCategoryInvalid()
         {
-            HttpContext = new DefaultHttpContext { User = user }
-        };
+            // Arrange
+            var mockManager = new Mock<IManager>(MockBehavior.Strict);
+            var mockUserMgr = new Mock<UserManager<IdentityUser>>(
+                Mock.Of<IUserStore<IdentityUser>>(), null, null, null, null, null, null, null, null);
 
-        // Simuleer een geldige ModelState
-        controller.ModelState.Clear();
+            var controller = new EventController(mockManager.Object, mockUserMgr.Object);
 
-        // Mock de user manager en manager
-        mockUserManager.Setup(um => um.GetUserAsync(user)).ReturnsAsync(identityUser);
-        mockManager.Setup(m => m.AddEvent(
-            newEvent.EventName,
-            newEvent.EventDate,
-            newEvent.TicketPrice,
-            newEvent.EventDescription,
-            newEvent.Category,
-            userId
-        )).Returns(new Event { EventId = 1, EventName = newEvent.EventName }); // Simuleer een toegevoegd event
+            var newEvent = new Event
+            {
+                EventName = "New Event",
+                EventDate = DateTime.Today.AddDays(10),
+                TicketPrice = 30m,
+                EventDescription = "A new event",
+                Category = 0 // invalid
+            };
 
-        // Act
-        var result = await controller.Add(newEvent);
+            var userId = "user123";
+            var identityUser = new IdentityUser { Id = userId };
+            var user = new ClaimsPrincipal(new ClaimsIdentity(
+                new[] { new Claim(ClaimTypes.NameIdentifier, userId) }, "mock"));
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+            mockUserMgr.Setup(um => um.GetUserAsync(user)).ReturnsAsync(identityUser);
 
-        // Assert
-        var redirectResult = Assert.IsType<RedirectToActionResult>(result);
-        Assert.Equal("Details", redirectResult.ActionName);
-        Assert.Equal(1, redirectResult.RouteValues["id"]);
+            // Act
+            var result = await controller.Add(newEvent);
 
-        // Verify that AddEvent was called once
-        mockManager.Verify(m => m.AddEvent(
-            newEvent.EventName,
-            newEvent.EventDate,
-            newEvent.TicketPrice,
-            newEvent.EventDescription,
-            newEvent.Category,
-            userId
-        ), Times.Once());
-    }
+            // Assert
+            var view = Assert.IsType<ViewResult>(result);
+            var model = Assert.IsType<Event>(view.Model);
+            Assert.Equal(newEvent, model);
+            Assert.False(controller.ModelState.IsValid);
+            Assert.True(controller.ModelState.ContainsKey("Category"));
+            Assert.Equal("Please select a valid category.", controller.ModelState["Category"].Errors[0].ErrorMessage);
 
-    [Fact]
-    public async Task Add_GivenInvalidCategory_ReturnsView()
-    {
-        // Arrange
-        var mockManager = new Mock<IManager>();
-        var mockUserManager = new Mock<UserManager<IdentityUser>>(
-            Mock.Of<IUserStore<IdentityUser>>(), null, null, null, null, null, null, null, null);
-        
-        var controller = new EventController(mockManager.Object, mockUserManager.Object);
+            mockManager.Verify(m => m.AddEvent(
+                It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<decimal?>(),
+                It.IsAny<string>(), It.IsAny<EventCategory>(), It.IsAny<string>()),
+                Times.Never()); // verification: manager niet aangeroepen
+        }
 
-        var newEvent = new Event
+        [Fact]
+        public async Task Add_ShouldReturnUnauthorized_WhenUserNotFound()
         {
-            EventName = "New Event",
-            EventDate = DateTime.Today.AddDays(10),
-            TicketPrice = 30.00m,
-            EventDescription = "A new event",
-            Category = 0 // Ongeldige categorie
-        };
+            // Arrange
+            var mockManager = new Mock<IManager>(MockBehavior.Strict);
+            var mockUserMgr = new Mock<UserManager<IdentityUser>>(
+                Mock.Of<IUserStore<IdentityUser>>(), null, null, null, null, null, null, null, null);
 
-        var userId = "user123";
-        var identityUser = new IdentityUser { Id = userId };
+            var controller = new EventController(mockManager.Object, mockUserMgr.Object);
 
-        // Simuleer een ingelogde gebruiker
-        var user = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, userId) }, "mock"));
-        controller.ControllerContext = new ControllerContext
+            var newEvent = new Event
+            {
+                EventName = "New Event",
+                EventDate = DateTime.Today.AddDays(10),
+                TicketPrice = 30m,
+                EventDescription = "A new event",
+                Category = EventCategory.Music
+            };
+
+            var user = new ClaimsPrincipal(new ClaimsIdentity(
+                new[] { new Claim(ClaimTypes.NameIdentifier, "user123") }, "mock"));
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            mockUserMgr.Setup(um => um.GetUserAsync(user)).ReturnsAsync((IdentityUser)null);
+
+            // Act
+            var result = await controller.Add(newEvent);
+
+            // Assert
+            var unauthorized = Assert.IsType<UnauthorizedObjectResult>(result);
+            Assert.Equal("User not found in the database.", unauthorized.Value);
+
+            mockManager.Verify(m => m.AddEvent(
+                It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<decimal?>(),
+                It.IsAny<string>(), It.IsAny<EventCategory>(), It.IsAny<string>()),
+                Times.Never()); // verification: manager niet aangeroepen
+        }
+
+        [Fact]
+        public async Task Add_ShouldReturnUnauthorized_WhenAnonymous()
         {
-            HttpContext = new DefaultHttpContext { User = user }
-        };
+            // Arrange
+            var mockManager = new Mock<IManager>(MockBehavior.Strict);
+            var mockUserMgr = new Mock<UserManager<IdentityUser>>(
+                Mock.Of<IUserStore<IdentityUser>>(), null, null, null, null, null, null, null, null);
 
-        // Mock de user manager
-        mockUserManager.Setup(um => um.GetUserAsync(user)).ReturnsAsync(identityUser);
+            var controller = new EventController(mockManager.Object, mockUserMgr.Object);
 
-        // Act
-        var result = await controller.Add(newEvent);
+            // niet ingelogd → lege identity (IsAuthenticated=false)
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new ClaimsPrincipal(new ClaimsIdentity())
+                }
+            };
 
-        // Assert
-        var viewResult = Assert.IsType<ViewResult>(result);
-        var model = Assert.IsType<Event>(viewResult.Model);
-        Assert.Equal(newEvent, model);
-        Assert.False(controller.ModelState.IsValid);
-        Assert.True(controller.ModelState.ContainsKey("Category"));
-        Assert.Equal("Please select a valid category.", controller.ModelState["Category"].Errors[0].ErrorMessage);
+            var newEvent = new Event
+            {
+                EventName = "E",
+                EventDate = DateTime.Today.AddDays(1),
+                TicketPrice = 10m,
+                EventDescription = "desc",
+                Category = EventCategory.Music // geldig, zodat we de Unauthorized-tak raken
+            };
 
-        // Verify that AddEvent was not called
-        mockManager.Verify(m => m.AddEvent(
-            It.IsAny<string>(),
-            It.IsAny<DateTime>(),
-            It.IsAny<decimal?>(),
-            It.IsAny<string>(),
-            It.IsAny<EventCategory>(),
-            It.IsAny<string>()
-        ), Times.Never());
-    }
+            // Act
+            var result = await controller.Add(newEvent);
 
-    
-
-    
-    [Fact]
-    public async Task Add_GivenUserNotFound_ReturnsUnauthorized()
-    {
-        // Arrange
-        var mockManager = new Mock<IManager>();
-        var mockUserManager = new Mock<UserManager<IdentityUser>>(
-            Mock.Of<IUserStore<IdentityUser>>(), null, null, null, null, null, null, null, null);
-        
-        var controller = new EventController(mockManager.Object, mockUserManager.Object);
-
-        var newEvent = new Event
-        {
-            EventName = "New Event",
-            EventDate = DateTime.Today.AddDays(10),
-            TicketPrice = 30.00m,
-            EventDescription = "A new event",
-            Category = EventCategory.Music
-        };
-
-        var userId = "user123";
-
-        // Simuleer een ingelogde gebruiker
-        var user = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, userId) }, "mock"));
-        controller.ControllerContext = new ControllerContext
-        {
-            HttpContext = new DefaultHttpContext { User = user }
-        };
-
-        // Mock de user manager om geen gebruiker te vinden
-        mockUserManager.Setup(um => um.GetUserAsync(user)).ReturnsAsync((IdentityUser)null);
-
-        // Act
-        var result = await controller.Add(newEvent);
-
-        // Assert
-        var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
-        Assert.Equal("User not found in the database.", unauthorizedResult.Value);
-
-        // Verify that AddEvent was not called
-        mockManager.Verify(m => m.AddEvent(
-            It.IsAny<string>(),
-            It.IsAny<DateTime>(),
-            It.IsAny<decimal?>(),
-            It.IsAny<string>(),
-            It.IsAny<EventCategory>(),
-            It.IsAny<string>()
-        ), Times.Never());
+            // Assert
+            var unauthorized = Assert.IsType<UnauthorizedObjectResult>(result);
+            Assert.Equal("User is not authenticated.", unauthorized.Value);
+            mockManager.Verify(m => m.AddEvent(
+                It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<decimal?>(),
+                It.IsAny<string>(), It.IsAny<EventCategory>(), It.IsAny<string>()),
+                Times.Never()); // verification: manager niet aangeroepen
+        }
     }
 }

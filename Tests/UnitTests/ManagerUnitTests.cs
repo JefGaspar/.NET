@@ -1,87 +1,131 @@
+using System;
+using System.ComponentModel.DataAnnotations;
 using Moq;
 using Xunit;
+
 using EM.BL;
 using EM.BL.Domain;
 using EM.DAL;
 
-namespace Tests.UnitTests;
-
-public class ManagerUnitTests
+namespace Tests.UnitTests
 {
-    [Fact]
-    public void AddEvent_GivenValidData_CreatesEventAndReturnsIt()
+    public class ManagerUnitTests
     {
-        // Arrange
-        string name = "Test Event";
-        DateTime date = DateTime.Today.AddDays(5);
-        decimal? ticketPrice = 25.00m;
-        string description = "A test event";
-        EventCategory category = EventCategory.Music;
-        string userId = "user123";
+        // ---------- AddEvent ----------
 
-        var mockRepository = new Mock<IRepository>();
-        var manager = new Manager(mockRepository.Object);
-
-        // Set up repository mock to expect the CreateEvent call
-        mockRepository.Setup(repo => repo.CreateEvent(It.IsAny<Event>())).Verifiable();
-
-        // Act
-        Event createdEvent = manager.AddEvent(name, date, ticketPrice, description, category, userId);
-
-        // Assert
-        Assert.NotNull(createdEvent);
-        Assert.Equal(name, createdEvent.EventName);
-        Assert.Equal(date, createdEvent.EventDate);
-        Assert.Equal(ticketPrice, createdEvent.TicketPrice);
-        Assert.Equal(description, createdEvent.EventDescription);
-        Assert.Equal(category, createdEvent.Category);
-        Assert.Equal(userId, createdEvent.UserId);
-
-        // Verify that CreateEvent was called once
-        mockRepository.Verify(repo => repo.CreateEvent(It.IsAny<Event>()), Times.Once());
-    }
-
-   
-
-    [Fact]
-    public void ChangeEvent_GivenValidEvent_UpdatesEvent()
-    {
-        // Arrange
-        var evt = new Event
+        [Fact]
+        public void AddEvent_ShouldCreateAndReturnEvent_WhenInputValid()
         {
-            EventId = 1,
-            EventName = "Updated Event",
-            EventDate = DateTime.Today.AddDays(10),
-            TicketPrice = 30.00m,
-            EventDescription = "Updated description",
-            Category = EventCategory.Sport,
-            UserId = "user123"
-        };
+            // Arrange
+            var repo = new Mock<IRepository>(MockBehavior.Strict);
+            repo.Setup(r => r.CreateEvent(It.Is<Event>(e =>
+                e.EventName == "Test Event" &&
+                e.TicketPrice == 25m &&
+                e.Category == EventCategory.Music &&
+                e.UserId == "user123"
+            ))).Verifiable();
 
-        var existingEvent = new Event
+            var sut = new Manager(repo.Object);
+
+            // Act
+            var created = sut.AddEvent(
+                name: "Test Event",
+                date: DateTime.Today.AddDays(5),
+                ticketPrice: 25m,
+                description: "A test event",
+                category: EventCategory.Music,
+                userId: "user123");
+
+            // Assert
+            Assert.NotNull(created);
+            Assert.Equal("Test Event", created.EventName);
+            Assert.Equal(25m, created.TicketPrice);
+            Assert.Equal(EventCategory.Music, created.Category);
+            Assert.Equal("user123", created.UserId);
+            repo.VerifyAll(); // verification: CreateEvent exact één keer met juiste entity
+        }
+
+        [Fact]
+        public void AddEvent_ShouldThrowValidationException_WhenNameMissing()
         {
-            EventId = 1,
-            EventName = "Original Event",
-            EventDate = DateTime.Today.AddDays(5),
-            TicketPrice = 25.00m,
-            EventDescription = "Original description",
-            Category = EventCategory.Music,
-            UserId = "user123"
-        };
+            // Arrange
+            var repo = new Mock<IRepository>(MockBehavior.Strict);
+            var sut  = new Manager(repo.Object);
 
-        var mockRepository = new Mock<IRepository>();
-        mockRepository.Setup(repo => repo.ReadEvent(1)).Returns(existingEvent);
-        mockRepository.Setup(repo => repo.UpdateEvent(It.IsAny<Event>())).Verifiable();
+            // Act
+            var ex = Assert.Throws<ValidationException>(() =>
+                sut.AddEvent(
+                    name: "",
+                    date: DateTime.Today.AddDays(5),
+                    ticketPrice: 25m,
+                    description: "desc",
+                    category: EventCategory.Music,
+                    userId: "u"));
 
-        var manager = new Manager(mockRepository.Object);
+            // Assert
+            Assert.Contains("EventName", ex.Message);
+            repo.Verify(r => r.CreateEvent(It.IsAny<Event>()), Times.Never()); // verification: niet aangeroepen
+        }
 
-        // Act
-        manager.ChangeEvent(evt);
+        // ---------- ChangeEvent ----------
 
-        // Assert
-        // Verify that UpdateEvent was called once
-        mockRepository.Verify(repo => repo.UpdateEvent(It.IsAny<Event>()), Times.Once());
+        [Fact]
+        public void ChangeEvent_ShouldCallRepositoryUpdate_WhenInputValid()
+        {
+            // Arrange
+            var evt = new Event
+            {
+                EventId = 1,
+                EventName = "Updated Event",
+                EventDate = DateTime.Today.AddDays(10),
+                TicketPrice = 30m,
+                EventDescription = "Updated",
+                Category = EventCategory.Sport,
+                UserId = "user123"
+            };
+
+            var repo = new Mock<IRepository>(MockBehavior.Strict);
+            repo.Setup(r => r.UpdateEvent(It.Is<Event>(e =>
+                e.EventId == 1 &&
+                e.EventName == "Updated Event" &&
+                e.TicketPrice == 30m &&
+                e.Category == EventCategory.Sport &&
+                e.UserId == "user123"
+            ))).Verifiable();
+
+            var sut = new Manager(repo.Object);
+
+            // Act
+            sut.ChangeEvent(evt);
+
+            // Assert
+            repo.VerifyAll(); // verification: UpdateEvent exact één keer met juiste entity
+        }
+
+        [Fact]
+        public void ChangeEvent_ShouldThrowValidationException_WhenNameMissing()
+        {
+            // Arrange
+            var evt = new Event
+            {
+                EventId = 1,
+                EventName = "", // invalid
+                EventDate = DateTime.Today.AddDays(10),
+                TicketPrice = 30m,
+                EventDescription = "Updated",
+                Category = EventCategory.Sport,
+                UserId = "user123"
+            };
+
+            var repo = new Mock<IRepository>(MockBehavior.Strict);
+            var sut  = new Manager(repo.Object);
+
+            // Act
+            var ex = Assert.Throws<ValidationException>(() => sut.ChangeEvent(evt));
+
+            // Assert
+            Assert.Contains("EventName", ex.Message);
+            repo.Verify(r => r.UpdateEvent(It.IsAny<Event>()), Times.Never()); // verification: niet aangeroepen
+        }
     }
-
-   
 }

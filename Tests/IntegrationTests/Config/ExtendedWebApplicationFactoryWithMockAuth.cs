@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.TestHost;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,72 +17,84 @@ namespace Tests.IntegrationTests.Config;
 public class ExtendedWebApplicationFactoryWithMockAuth<TProgram>
     : WebApplicationFactory<TProgram> where TProgram : class
 {
-    // (*) use of in-memory sqlite database
-    public SqliteConnection SqliteInMemoryConnection { get; private set; }
+    // Open gehouden in-memory SQLite connectie zodat de DB leeft zolang de factory leeft.
+    public SqliteConnection SqliteInMemoryConnection { get; private set; } = default!;
 
-    // (**) use of authenticated user
-    private MockClaimSeed mockClaimSeed = new MockClaimSeed(new Claim[] { });
+    // Dynamisch aanpasbare claim-seed (via SetAuthenticatedUser)
+    private MockClaimSeed _mockClaimSeed = new MockClaimSeed(Array.Empty<Claim>());
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        // (*) use of in-memory sqlite database
+        builder.UseEnvironment("Test");
+
         builder.ConfigureServices(services =>
         {
-            var dbContextOptionsDescriptor = services.SingleOrDefault(
-                d => d.ServiceType == typeof(DbContextOptions<EmDbContext>));
-            if (dbContextOptionsDescriptor != null)
-            {
-                services.Remove(dbContextOptionsDescriptor);
-            }
+            // Verwijder bestaande EmDbContext-registraties
+            var dbContextOptionsDescriptor =
+                services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<EmDbContext>));
+            if (dbContextOptionsDescriptor != null) services.Remove(dbContextOptionsDescriptor);
 
-            var dbConnectionDescriptor = services.SingleOrDefault(
-                d => d.ServiceType == typeof(DbConnection));
-            if (dbConnectionDescriptor != null)
-            {
-                services.Remove(dbConnectionDescriptor);
-            }
+            var dbConnectionDescriptor =
+                services.SingleOrDefault(d => d.ServiceType == typeof(DbConnection));
+            if (dbConnectionDescriptor != null) services.Remove(dbConnectionDescriptor);
 
-            // Create open SqliteConnection so EF won't automatically close it.
-            services.AddSingleton<DbConnection>(container =>
+            // Één gedeelde open SQLite in-memory connectie
+            services.AddSingleton<DbConnection>(_ =>
             {
                 SqliteInMemoryConnection = new SqliteConnection("DataSource=:memory:");
-                var connection = SqliteInMemoryConnection;
-                connection.Open();
-
-                return connection;
+                SqliteInMemoryConnection.Open(); // uiterst belangrijk
+                return SqliteInMemoryConnection;
             });
 
-            services.AddDbContext<EmDbContext>((container, options) =>
+            services.AddDbContext<EmDbContext>((sp, options) =>
             {
-                var connection = container.GetRequiredService<DbConnection>();
+                var connection = sp.GetRequiredService<DbConnection>();
                 options.UseSqlite(connection);
             });
 
-            // Maak de database aan voordat de host start
-            using var scope = services.BuildServiceProvider().CreateScope();
-            var dbContext = scope.ServiceProvider.GetRequiredService<EmDbContext>();
-
-            // Voeg logging toe om te controleren of de database is aangemaakt
-            Console.WriteLine("Database created: " + dbContext.Database.CanConnect());
-            var eventsTableExists = dbContext.Database
-                .ExecuteSqlRaw("SELECT name FROM sqlite_master WHERE type='table' AND name='Events';") > 0;
-            Console.WriteLine("Events table exists: " + eventsTableExists);
+            // Bouw een tijdelijke provider om de DB te initialiseren
+            using var sp = services.BuildServiceProvider();
+            using var scope = sp.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<EmDbContext>();
+            db.Database.EnsureCreated(); // ← Maak tabellen effectief aan (geen SELECT-hack)
         });
 
-        // (**) use of authenticated user
-        builder.ConfigureTestServices(services =>
+        builder.ConfigureServices(services =>
         {
-            services.AddSingleton<IAuthenticationSchemeProvider, MockSchemeProvider>();
-            services.AddScoped<MockClaimSeed>(_ => mockClaimSeed);
-        });
+            // Maak "TestAuth" de default, laat Identity.Application met rust
+            services.AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = "TestAuth";
+                    options.DefaultChallengeScheme    = "TestAuth";
+                    options.DefaultScheme             = "TestAuth";
+                })
+                .AddScheme<AuthenticationSchemeOptions, MockAuthenticationHandler>(
+                    "TestAuth", _ => { });
 
-        builder.UseEnvironment("Test"); // Gebruik "Test"-omgeving om seeding over te slaan
+            // jouw claims-seed die de handler injecteert
+            services.AddScoped(_ => _mockClaimSeed);
+        });
     }
 
-    public ExtendedWebApplicationFactoryWithMockAuth<TProgram> SetAuthenticatedUser(params Claim[] claimSeed)
+    /// <summary>
+    /// Stel de "ingelogde" gebruiker in. Laat leeg voor anonieme flow.
+    /// </summary>
+    public ExtendedWebApplicationFactoryWithMockAuth<TProgram> SetAuthenticatedUser(params Claim[] claims)
     {
-        mockClaimSeed = new MockClaimSeed(claimSeed);
+        _mockClaimSeed = new MockClaimSeed(claims ?? Array.Empty<Claim>());
         return this;
+    }
+
+    /// <summary>
+    /// (Optioneel) Reset de testdatabase naar een lege staat.
+    /// Handig om test-data leakage te voorkomen tussen tests.
+    /// </summary>
+    public void ResetDatabase()
+    {
+        using var scope = Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<EmDbContext>();
+        db.Database.EnsureDeleted();
+        db.Database.EnsureCreated();
     }
 
     protected override void Dispose(bool disposing)
@@ -96,30 +107,7 @@ public class ExtendedWebApplicationFactoryWithMockAuth<TProgram>
         base.Dispose(disposing);
     }
 
-    public class MockSchemeProvider : AuthenticationSchemeProvider
-    {
-        public MockSchemeProvider(IOptions<AuthenticationOptions> options) : base(options)
-        {
-        }
-
-        protected MockSchemeProvider(
-            IOptions<AuthenticationOptions> options,
-            IDictionary<string, AuthenticationScheme> schemes
-        )
-            : base(options, schemes)
-        {
-        }
-
-        public override Task<AuthenticationScheme> GetSchemeAsync(string name)
-        {
-            return Task.FromResult(new AuthenticationScheme(
-                IdentityConstants.ApplicationScheme,  // ← let op deze exacte string
-                IdentityConstants.ApplicationScheme,
-                typeof(MockAuthenticationHandler)
-            ));
-        }
-
-    }
+    // ----------------- Mock Auth implementatie -----------------
 
     public class MockAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
     {
@@ -130,35 +118,32 @@ public class ExtendedWebApplicationFactoryWithMockAuth<TProgram>
             IOptionsMonitor<AuthenticationSchemeOptions> options,
             ILoggerFactory logger,
             UrlEncoder encoder,
-            TimeProvider timeProvider) // Gebruik TimeProvider
-            : base(options, logger, encoder)
+            ISystemClock clock) : base(options, logger, encoder, clock)
         {
             _claimSeed = claimSeed;
         }
 
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
-            if (!_claimSeed.GetSeeds().Any())
-                return Task.FromResult(AuthenticateResult.Fail("No authenticated user seeded for test!"));
+            var claims = _claimSeed.GetSeeds();
 
-            var claimsIdentity = new ClaimsIdentity(_claimSeed.GetSeeds(), IdentityConstants.ApplicationScheme);
-            var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
-            var ticket = new AuthenticationTicket(claimsPrincipal, IdentityConstants.ApplicationScheme);
+            // Geen claims => anonieme gebruiker (NoResult), niét Fail()
+            if (!claims.Any())
+                return Task.FromResult(AuthenticateResult.NoResult());
+
+            var identity  = new ClaimsIdentity(claims, "TestAuth");
+            var principal = new ClaimsPrincipal(identity);
+            var ticket    = new AuthenticationTicket(principal, "TestAuth");
             return Task.FromResult(AuthenticateResult.Success(ticket));
         }
     }
 
-    public class MockClaimSeed
+
+    public sealed class MockClaimSeed
     {
         private readonly IEnumerable<Claim> _seed;
 
-        public MockClaimSeed(IEnumerable<Claim> seed)
-        {
-            _seed = seed;
-        }
-
+        public MockClaimSeed(IEnumerable<Claim> seed) => _seed = seed ?? Enumerable.Empty<Claim>();
         public IEnumerable<Claim> GetSeeds() => _seed;
     }
-    
-    
 }
