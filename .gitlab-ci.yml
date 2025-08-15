@@ -1,76 +1,68 @@
-# Definieer de stages
-stages:
-  - build
-  - test
-
-# Gebruik een .NET SDK image
 image: mcr.microsoft.com/dotnet/sdk:8.0
 
-# Variabelen voor herbruikbaarheid
-variables:
-  OBJECTS_DIRECTORY: 'obj'
-  NUGET_PACKAGES_DIRECTORY: '.nuget'
-  SOURCE_CODE_PATH: '*/'
-  TEST_PROJECT_PATH: 'Tests'
-  TEST_RESULTS_PATH: 'test-results.xml'
-  COVERAGE_DIR: 'coverage'
+stages: [build, test]
 
-# Cache NuGet-pakketten en build-bestanden
+variables:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true"
+  # Zorg dat NuGet in de repo-map restore't, zodat we het kunnen cachen
+  NUGET_PACKAGES: "$CI_PROJECT_DIR/.nuget/packages"
+
+  BUILD_CONFIGURATION: "Release"
+  TEST_RESULTS_FILE: "test-results.xml"             # JUnit voor Tests-tab
+  COVERAGE_DIR: "coverage"                          # dotnet test output dir
+  COVERAGE_FILE: "coverage/coverage.cobertura.xml"  # vast pad voor GitLab coverage_report
+
 cache:
   key: "$CI_COMMIT_REF_SLUG"
   paths:
-    - '$SOURCE_CODE_PATH$OBJECTS_DIRECTORY/project.assets.json'
-    - '$SOURCE_CODE_PATH$OBJECTS_DIRECTORY/*.csproj.nuget.*'
-    - '$NUGET_PACKAGES_DIRECTORY'
+    - .nuget/packages/       # ✅ géén wildcards; dit is genoeg
   policy: pull-push
 
-# Voer restore uit vóór alle jobs
 before_script:
-  - 'dotnet restore --packages $NUGET_PACKAGES_DIRECTORY'
+  - dotnet restore -c $BUILD_CONFIGURATION   # NUGET_PACKAGES stuurt restore naar .nuget/packages
 
-# Build stage: compileer het project
-build_job:
+build:
   stage: build
   script:
-    - 'dotnet build --no-restore'
+    - dotnet build EventManager.sln --no-restore -c $BUILD_CONFIGURATION
   artifacts:
-    paths:
-      - bin/
-      - obj/
     expire_in: 1 day
-
-# Test stage: voer tests uit en genereer rapporten
-test_job:
-  stage: test
-  dependencies:
-    - build_job
-  script:
-    # Voer tests uit met JUnit logger en verzamel code coverage
-    - 'dotnet test $TEST_PROJECT_PATH --no-restore --logger "junit;LogFilePath=$TEST_RESULTS_PATH;MethodFormat=Class;FailureBodyFormat=Verbose" --collect:"XPlat Code Coverage" --results-directory $COVERAGE_DIR'
-    # Controleer of het JUnit-rapport bestaat
-    - 'ls -la $TEST_RESULTS_PATH || echo "JUnit report not found!"'
-    # Installeer de reportgenerator tool
-    - 'dotnet tool install -g dotnet-reportgenerator-globaltool'
-    # Voeg het pad naar dotnet tools toe aan PATH
-    - 'export PATH="$PATH:/root/.dotnet/tools"'
-    # Genereer een HTML-rapport van de code coverage
-    - 'reportgenerator -reports:"$COVERAGE_DIR/*/coverage.cobertura.xml" -targetdir:"coveragereport" -reporttypes:Html'
-    # Vind het exacte pad naar coverage.cobertura.xml
-    - 'COVERAGE_FILE=$(find $COVERAGE_DIR -type f -name "coverage.cobertura.xml" | head -n 1)'
-    # Controleer of het coverage bestand bestaat
-    - 'ls -la $COVERAGE_FILE || echo "Coverage file not found!"'
-    # Extract coverage percentage voor GitLab UI
-    - 'COVERAGE_VALUE=$(grep -oPm 1 "line-rate=\"\K([0-9.]+)" "$COVERAGE_FILE")'
-    - 'COVERAGE=$(echo "scale=2; $COVERAGE_VALUE * 100" | bc)'
-    - 'echo "TOTAL_COVERAGE=$COVERAGE%"'
-  coverage: '/TOTAL_COVERAGE=(\d+.\d+)/'
-  artifacts:
     paths:
-      - '$TEST_RESULTS_PATH'
-      - coveragereport/
+      - ./**/bin/
+      - ./**/obj/
+
+test:
+  stage: test
+  needs: ["build"]
+  script:
+    # 1) Tests draaien (solution), JUnit + Cobertura coverage
+    - dotnet test EventManager.sln --no-build -c $BUILD_CONFIGURATION
+      --logger "junit;LogFilePath=$TEST_RESULTS_FILE;MethodFormat=Class;FailureBodyFormat=Verbose"
+      --collect:"XPlat Code Coverage"
+      --results-directory $COVERAGE_DIR
+
+    # 2) Eén vast Cobertura-bestand maken (GitLab accepteert hier geen wildcard)
+    - COVERAGE_XML=$(find "$COVERAGE_DIR" -type f -name "coverage.cobertura.xml" | head -n 1)
+    - test -f "$COVERAGE_XML" || (echo "Coverage file not found!" && exit 1)
+    - mkdir -p "$(dirname "$COVERAGE_FILE")"
+    - cp "$COVERAGE_XML" "$COVERAGE_FILE"
+
+    # 3) HTML coverage rapport genereren als artifact
+    - dotnet tool install -g dotnet-reportgenerator-globaltool
+    - export PATH="$PATH:/root/.dotnet/tools"
+    - reportgenerator -reports:"$COVERAGE_FILE" -targetdir:"coveragereport" -reporttypes:Html
+
+    # 4) Coverage % in job-log (zodat 'coverage:' regex het toont)
+    - echo "TOTAL_COVERAGE=$(grep -oPm1 'line-rate=\"\\K[0-9.]+' "$COVERAGE_FILE" | awk '{printf "%.2f", $1*100}')%"
+
+  coverage: '/TOTAL_COVERAGE=(\d+\.\d+)%/'
+  artifacts:
+    expire_in: 1 week
+    paths:
+      - coveragereport/           # HTML (CSS/JS) te downloaden uit artifacts
     reports:
-      junit: '$TEST_RESULTS_PATH'
+      junit: $TEST_RESULTS_FILE   # Voor het Tests-tabblad
       coverage_report:
         coverage_format: cobertura
-        path: '$COVERAGE_DIR/*/coverage.cobertura.xml'
-    expire_in: 1 week
+        path: $COVERAGE_FILE      # Vast bestandspad (géén wildcard)
