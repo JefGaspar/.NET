@@ -170,4 +170,16 @@ Response file saved.
 ```
 
 
+## Sprint 8
 
+### Tests lokaal uitvoeren
+```shell
+dotnet test
+```
+![Code coverage](docs/CovrageSummary.png)
+
+### Complexe authorization tests
+Tests.IntegrationTests.EventsApiControllerTests
+
+### Verificatie tests
+Tests.UnitTests.EventControllerUnitTests

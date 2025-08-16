@@ -40,44 +40,43 @@ test:
   script:
     - set -eo pipefail
 
-    # 1) Tests draaien (solution). Schrijf JUnit rapport en Cobertura coverage.
-    #    We vangen de exitcode op zodat we ARTIFACTS blijven genereren.
+    # 1) Tests + JUnit naar een vast pad in coverage/
     - |
       dotnet test EventManager.sln --no-build -c $BUILD_CONFIGURATION \
-        --logger "junit;LogFilePath=$TEST_RESULTS_FILE;MethodFormat=Class;FailureBodyFormat=Verbose" \
+        --logger "junit;LogFilePath=$COVERAGE_DIR/junit.xml;MethodFormat=Class;FailureBodyFormat=Verbose" \
         --collect:"XPlat Code Coverage" \
         --results-directory $COVERAGE_DIR \
       || TEST_EXIT=$?
       echo "TEST_EXIT=${TEST_EXIT:=0}"
 
-    # 2) Laat zien wat er is aangemaakt (debug-vriendelijk)
+    # 2) Debug: toon wat er is aangemaakt
     - echo "--- produced files (first 3 levels) ---"
     - find . -maxdepth 3 -type f -name "*.xml" -o -name "*.html" -print
 
-    # 3) Zet Cobertura op een vast pad (GitLab accepteert hier geen wildcards)
+    # 3) Cobertura naar vast pad
     - COVERAGE_XML=$(find "$COVERAGE_DIR" -type f -name "coverage.cobertura.xml" | head -n 1 || true)
     - if [ -n "$COVERAGE_XML" ]; then mkdir -p "$(dirname "$COVERAGE_FILE")"; cp "$COVERAGE_XML" "$COVERAGE_FILE"; else echo "Coverage file not found!"; fi
 
-    # 4) HTML coverage rapport (alleen als Cobertura is gevonden)
+    # 4) HTML coverage
     - dotnet tool install -g dotnet-reportgenerator-globaltool
     - export PATH="$PATH:/root/.dotnet/tools"
     - if [ -f "$COVERAGE_FILE" ]; then reportgenerator -reports:"$COVERAGE_FILE" -targetdir:"coveragereport" -reporttypes:Html; fi
 
-    # 5) Coverage % in joblog (voor 'coverage:' regex). Alleen als file bestaat.
+    # 5) Coverage % in log
     - if [ -f "$COVERAGE_FILE" ]; then echo "TOTAL_COVERAGE=$(grep -oPm1 'line-rate=\"\\K[0-9.]+' "$COVERAGE_FILE" | awk '{printf "%.2f", $1*100}')%"; fi
 
-    # 6) Geef de oorspronkelijke test-exitcode terug (pipeline faalt bij falende tests)
     - exit ${TEST_EXIT:=0}
 
   coverage: '/TOTAL_COVERAGE=(\d+\.\d+)%/'
   artifacts:
-    when: always                 # ⬅️ upload artifacts zelfs als de tests faalden
+    when: always
     expire_in: 1 week
     paths:
-      - coveragereport/          # HTML (CSS/JS)
-      - $TEST_RESULTS_FILE       # losse JUnit file (handig)
+      - coveragereport/
+      - $COVERAGE_DIR/junit.xml
     reports:
-      junit: $TEST_RESULTS_FILE
+      junit: $COVERAGE_DIR/junit.xml             # ← nu exact pad
       coverage_report:
         coverage_format: cobertura
         path: $COVERAGE_FILE
+
