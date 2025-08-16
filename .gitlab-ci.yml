@@ -3,11 +3,7 @@ image: mcr.microsoft.com/dotnet/sdk:8.0
 stages: [build, test]
 
 variables:
-  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
-  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true"
   BUILD_CONFIGURATION: "Release"
-
-  # vaste paden (zoals in de slides):
   TEST_RESULTS_DIR: "Tests/TestResults"
   JUNIT_FILE: "Tests/TestResults/TestResults.xml"
   COVERAGE_OUT: "coverage/coverage.cobertura.xml"
@@ -18,13 +14,11 @@ cache:
     - .nuget/packages/
   policy: pull-push
 
-before_script:
-  - dotnet restore
-
 build:
   stage: build
   script:
-    - dotnet build --no-restore -c $BUILD_CONFIGURATION
+    - dotnet restore
+    - dotnet build EventManager.sln -c $BUILD_CONFIGURATION --no-restore
   artifacts:
     expire_in: 1 day
     paths:
@@ -33,43 +27,31 @@ build:
 
 test:
   stage: test
-  needs: ["build"]
+  needs: [build]
   script:
     - mkdir -p "$TEST_RESULTS_DIR"
-    # 1) Run tests: JUnit XML + HTML rapport + Cobertura coverage
-    - >
-      dotnet test --no-build -c $BUILD_CONFIGURATION
-      --logger "junit;LogFilePath=$JUNIT_FILE;MethodFormat=Class;FailureBodyFormat=Verbose"
-      --logger "html;LogFileName=$TEST_RESULTS_DIR/TestReport.html"
-      --collect:"XPlat Code Coverage"
-      --results-directory "$TEST_RESULTS_DIR"
-      || TEST_EXIT=$?
-    - echo "TEST_EXIT=${TEST_EXIT:=0}"
-
-    # 2) Vind Cobertura en zet op een vast pad voor GitLab UI
+    - |
+      dotnet test EventManager.sln --no-build -c $BUILD_CONFIGURATION \
+        --logger "junit;LogFilePath=$JUNIT_FILE;MethodFormat=Class;FailureBodyFormat=Verbose" \
+        --collect:"XPlat Code Coverage" \
+        --results-directory "$TEST_RESULTS_DIR"
+    # Cobertura naar vast pad voor GitLab
     - COV=$(find "$TEST_RESULTS_DIR" -type f -name "coverage.cobertura.xml" | head -n 1 || true)
-    - if [ -n "$COV" ]; then mkdir -p "$(dirname "$COVERAGE_OUT")"; cp "$COV" "$COVERAGE_OUT"; else echo "Coverage file not found!"; fi
-
-    # 3) Genereer HTML coverage (artifact)
+    - if [ -n "$COV" ]; then mkdir -p coverage; cp "$COV" "$COVERAGE_OUT"; fi
+    # HTML coverage
     - dotnet tool install -g dotnet-reportgenerator-globaltool
     - export PATH="$PATH:/root/.dotnet/tools"
     - if [ -f "$COVERAGE_OUT" ]; then reportgenerator -reports:"$COVERAGE_OUT" -targetdir:"coveragereport" -reporttypes:Html; fi
-
-    # 4) Coverage % in joblog (voor regex)
+    # Percentage tonen in pipeline header
     - if [ -f "$COVERAGE_OUT" ]; then echo "TOTAL_COVERAGE=$(grep -oPm1 'line-rate=\"\\K[0-9.]+' "$COVERAGE_OUT" | awk '{printf "%.2f", $1*100}')%"; fi
-
-    - exit ${TEST_EXIT:=0}
-
   coverage: '/TOTAL_COVERAGE=(\d+\.\d+)%/'
   artifacts:
     when: always
     expire_in: 1 week
     paths:
-      - $TEST_RESULTS_DIR/TestReport.html
       - coveragereport/
-      - $JUNIT_FILE
     reports:
-      junit: $JUNIT_FILE
+      junit: "$JUNIT_FILE"
       coverage_report:
         coverage_format: cobertura
-        path: $COVERAGE_OUT
+        path: "$COVERAGE_OUT"
