@@ -14,19 +14,22 @@
         <PackageReference Include="xunit" Version="2.9.2" />
         <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
             <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+
+        <!-- Coverage voor Cobertura -->
         <PackageReference Include="coverlet.collector" Version="6.0.0">
             <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <!-- Belangrijk: de gangbare JUnit logger -->
+
+        <!-- JUnit XML logger zoals in de slides -->
         <PackageReference Include="JUnitXml.TestLogger" Version="3.0.124">
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
+
         <PackageReference Include="Moq" Version="4.20.72" />
         <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.13" />
     </ItemGroup>
+
 
     <ItemGroup>
         <Using Include="Xunit"/>

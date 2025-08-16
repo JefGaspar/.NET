@@ -5,14 +5,12 @@ stages: [build, test]
 variables:
   DOTNET_CLI_TELEMETRY_OPTOUT: "1"
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true"
-
-  # NuGet-cache in repo (sneller)
-  NUGET_PACKAGES: "$CI_PROJECT_DIR/.nuget/packages"
-
   BUILD_CONFIGURATION: "Release"
-  TEST_RESULTS_FILE: "test-results.xml"             # JUnit output (vast pad)
-  COVERAGE_DIR: "coverage"                          # directory voor dotnet test output
-  COVERAGE_FILE: "coverage/coverage.cobertura.xml"  # vast pad voor GitLab coverage_report
+
+  # vaste paden (zoals in de slides):
+  TEST_RESULTS_DIR: "Tests/TestResults"
+  JUNIT_FILE: "Tests/TestResults/TestResults.xml"
+  COVERAGE_OUT: "coverage/coverage.cobertura.xml"
 
 cache:
   key: "$CI_COMMIT_REF_SLUG"
@@ -21,13 +19,12 @@ cache:
   policy: pull-push
 
 before_script:
-  # restore kent geen -c/--configuration
-  - dotnet restore EventManager.sln
+  - dotnet restore
 
 build:
   stage: build
   script:
-    - dotnet build EventManager.sln --no-restore -c $BUILD_CONFIGURATION
+    - dotnet build --no-restore -c $BUILD_CONFIGURATION
   artifacts:
     expire_in: 1 day
     paths:
@@ -36,47 +33,43 @@ build:
 
 test:
   stage: test
-  needs: [ "build" ]
+  needs: ["build"]
   script:
-    - set -eo pipefail
-    # Tests + JUnit naar vast pad, én results in dezelfde map
-    - |
-      dotnet test EventManager.sln --no-build -c $BUILD_CONFIGURATION \
-        --logger "junit;LogFilePath=$COVERAGE_DIR/junit.xml;MethodFormat=Class;FailureBodyFormat=Verbose" \
-        --collect:"XPlat Code Coverage" \
-        --results-directory $COVERAGE_DIR \
+    - mkdir -p "$TEST_RESULTS_DIR"
+    # 1) Run tests: JUnit XML + HTML rapport + Cobertura coverage
+    - >
+      dotnet test --no-build -c $BUILD_CONFIGURATION
+      --logger "junit;LogFilePath=$JUNIT_FILE;MethodFormat=Class;FailureBodyFormat=Verbose"
+      --logger "html;LogFileName=$TEST_RESULTS_DIR/TestReport.html"
+      --collect:"XPlat Code Coverage"
+      --results-directory "$TEST_RESULTS_DIR"
       || TEST_EXIT=$?
-      echo "TEST_EXIT=${TEST_EXIT:=0}"
-    
-    # Debug: toon wat er staat, super handig
-    - echo "--- produced files ---"
-    - ls -la $COVERAGE_DIR || true
-    
-    # Cobertura naar vast pad
-    - COVERAGE_XML=$(find "$COVERAGE_DIR" -type f -name "coverage.cobertura.xml" | head -n 1 || true)
-    - if [ -n "$COVERAGE_XML" ]; then mkdir -p "$(dirname "$COVERAGE_FILE")"; cp "$COVERAGE_XML" "$COVERAGE_FILE"; else echo "Coverage file not found!"; fi
-    
-    # HTML coverage
+    - echo "TEST_EXIT=${TEST_EXIT:=0}"
+
+    # 2) Vind Cobertura en zet op een vast pad voor GitLab UI
+    - COV=$(find "$TEST_RESULTS_DIR" -type f -name "coverage.cobertura.xml" | head -n 1 || true)
+    - if [ -n "$COV" ]; then mkdir -p "$(dirname "$COVERAGE_OUT")"; cp "$COV" "$COVERAGE_OUT"; else echo "Coverage file not found!"; fi
+
+    # 3) Genereer HTML coverage (artifact)
     - dotnet tool install -g dotnet-reportgenerator-globaltool
     - export PATH="$PATH:/root/.dotnet/tools"
-    - if [ -f "$COVERAGE_FILE" ]; then reportgenerator -reports:"$COVERAGE_FILE" -targetdir:"coveragereport" -reporttypes:Html; fi
-    
-    # Coverage % (voor pipeline header)
-    - if [ -f "$COVERAGE_FILE" ]; then echo "TOTAL_COVERAGE=$(grep -oPm1 'line-rate=\"\\K[0-9.]+' "$COVERAGE_FILE" | awk '{printf "%.2f", $1*100}')%"; fi
+    - if [ -f "$COVERAGE_OUT" ]; then reportgenerator -reports:"$COVERAGE_OUT" -targetdir:"coveragereport" -reporttypes:Html; fi
+
+    # 4) Coverage % in joblog (voor regex)
+    - if [ -f "$COVERAGE_OUT" ]; then echo "TOTAL_COVERAGE=$(grep -oPm1 'line-rate=\"\\K[0-9.]+' "$COVERAGE_OUT" | awk '{printf "%.2f", $1*100}')%"; fi
 
     - exit ${TEST_EXIT:=0}
-  
+
   coverage: '/TOTAL_COVERAGE=(\d+\.\d+)%/'
   artifacts:
     when: always
     expire_in: 1 week
     paths:
+      - $TEST_RESULTS_DIR/TestReport.html
       - coveragereport/
-      - $COVERAGE_DIR/junit.xml
+      - $JUNIT_FILE
     reports:
-      junit: $COVERAGE_DIR/junit.xml     # <-- exact dit bestand
+      junit: $JUNIT_FILE
       coverage_report:
         coverage_format: cobertura
-        path: $COVERAGE_FILE
- 
-
+        path: $COVERAGE_OUT
