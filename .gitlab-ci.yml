@@ -36,11 +36,10 @@ build:
 
 test:
   stage: test
-  needs: ["build"]
+  needs: [ "build" ]
   script:
     - set -eo pipefail
-
-    # 1) Tests + JUnit naar een vast pad in coverage/
+    # Tests + JUnit naar vast pad, én results in dezelfde map
     - |
       dotnet test EventManager.sln --no-build -c $BUILD_CONFIGURATION \
         --logger "junit;LogFilePath=$COVERAGE_DIR/junit.xml;MethodFormat=Class;FailureBodyFormat=Verbose" \
@@ -48,25 +47,25 @@ test:
         --results-directory $COVERAGE_DIR \
       || TEST_EXIT=$?
       echo "TEST_EXIT=${TEST_EXIT:=0}"
-
-    # 2) Debug: toon wat er is aangemaakt
-    - echo "--- produced files (first 3 levels) ---"
-    - find . -maxdepth 3 -type f -name "*.xml" -o -name "*.html" -print
-
-    # 3) Cobertura naar vast pad
+    
+    # Debug: toon wat er staat, super handig
+    - echo "--- produced files ---"
+    - ls -la $COVERAGE_DIR || true
+    
+    # Cobertura naar vast pad
     - COVERAGE_XML=$(find "$COVERAGE_DIR" -type f -name "coverage.cobertura.xml" | head -n 1 || true)
     - if [ -n "$COVERAGE_XML" ]; then mkdir -p "$(dirname "$COVERAGE_FILE")"; cp "$COVERAGE_XML" "$COVERAGE_FILE"; else echo "Coverage file not found!"; fi
-
-    # 4) HTML coverage
+    
+    # HTML coverage
     - dotnet tool install -g dotnet-reportgenerator-globaltool
     - export PATH="$PATH:/root/.dotnet/tools"
     - if [ -f "$COVERAGE_FILE" ]; then reportgenerator -reports:"$COVERAGE_FILE" -targetdir:"coveragereport" -reporttypes:Html; fi
-
-    # 5) Coverage % in log
+    
+    # Coverage % (voor pipeline header)
     - if [ -f "$COVERAGE_FILE" ]; then echo "TOTAL_COVERAGE=$(grep -oPm1 'line-rate=\"\\K[0-9.]+' "$COVERAGE_FILE" | awk '{printf "%.2f", $1*100}')%"; fi
 
     - exit ${TEST_EXIT:=0}
-
+  
   coverage: '/TOTAL_COVERAGE=(\d+\.\d+)%/'
   artifacts:
     when: always
@@ -75,8 +74,9 @@ test:
       - coveragereport/
       - $COVERAGE_DIR/junit.xml
     reports:
-      junit: $COVERAGE_DIR/junit.xml             # ← nu exact pad
+      junit: $COVERAGE_DIR/junit.xml     # <-- exact dit bestand
       coverage_report:
         coverage_format: cobertura
         path: $COVERAGE_FILE
+ 
 
