@@ -50,7 +50,7 @@ test:
     expire_in: 1 week
     paths:
       - coveragereport/
-      - - "$TEST_RESULTS_DIR/"
+      - "$TEST_RESULTS_DIR/"
     reports:
       junit: "$JUNIT_FILE"
       coverage_report:
